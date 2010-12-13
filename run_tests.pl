@@ -50,7 +50,7 @@ sub run_one_test
     my $test     = shift;
     my $cur_time = [ gettimeofday ];
 
-    run3( "./$test", undef, \my $out, \my $err );
+    run3(["/bin/bash", "./$test"], undef, \my $out, \my $err );
     my $time     = tv_interval( $cur_time );
     my $status   = $? >> 8;
 

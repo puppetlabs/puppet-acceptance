@@ -53,7 +53,7 @@ for SPEC in $(find $TEST_DIR -name '*_spec.sh' | sort)  ; do
     continue
   fi
 
-  result=$($SPEC 2>&1)
+  result=$(/bin/bash $SPEC 2>&1)
   TEST_ERROR=$?
 
   if [ $TEST_ERROR -eq $EXIT_OK ] ; then
