@@ -147,10 +147,10 @@ sub create_xml_footer
     my %args = @_;
 return <<"XML";
   <system-out>
-  $args{stdout}
+<![CDATA[$args{stdout}]]>
   </system-out>
   <system-err>
-  $args{stderr}
+<![CDATA[$args{stderr}]]>
   </system-err>
 </testsuite>
 XML
