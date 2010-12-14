@@ -166,8 +166,10 @@ sub write_xml
 {
     my ($test, $xml) = @_;
 
-    $test =~ s[spec/][results/];
+    $test =~ s[spec/][];
     $test =~ s/.sh$/.xml/;
+    $test =~ s[/][-]g;
+    $test = 'results/' . $test;
 
     open my $out, '>', $test or die "Cannot write '$test': $!\n";
     print {$out} $xml;
