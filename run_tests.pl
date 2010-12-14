@@ -5,6 +5,7 @@ use warnings;
 
 use IPC::Run3 'run3';
 use Time::HiRes qw( gettimeofday tv_interval );
+use File::Find qw{};
 
 my %report_test =
 (
@@ -28,7 +29,12 @@ sub main
 
 sub find_tests
 {
-    return grep { -x } <spec/*_spec.sh>;
+    my @tests;
+    File::Find::find({
+        wanted   => sub { -f and /_spec\.sh$/ and push @tests, $_ },
+        no_chdir => 1,
+    }, 'spec');
+    return @tests;
 }
 
 sub run_tests
