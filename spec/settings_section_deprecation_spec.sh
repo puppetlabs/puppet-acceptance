@@ -6,6 +6,7 @@
 set -u
 
 source lib/setup.sh
+source lib/testlib.sh
 
 driver_master_and_agent_locally_using_old_executables
 
@@ -45,9 +46,5 @@ start_puppetd
 
 killwait ${master_pid}
 
-if grep -q deprecated "${OUTPUT}"; then
-  exit $EXIT_OK
-else
-  exit $EXIT_FAILURE
-fi
-
+file_contains deprecated "${OUTPUT}"
+exit $?

@@ -2,15 +2,12 @@
 
 set -u
 source lib/setup.sh
+source lib/testlib.sh
 set -e
 
 execute_manifest <<PP
 file{'/tmp/hello.$$.txt': content => 'hello world'}
 PP
 
-if grep -q 'hello world' /tmp/hello.$$.txt; then
-  exit $EXIT_OK
-else
-  exit $EXIT_FAILURE
-fi
-
+file_contains 'hello world' /tmp/hello.$$.txt
+exit $?

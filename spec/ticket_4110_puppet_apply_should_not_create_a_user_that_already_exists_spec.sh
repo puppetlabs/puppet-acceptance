@@ -1,6 +1,7 @@
 set -e
 
 source lib/setup.sh
+source lib/testlib.sh
 
 puppet apply --debug <<PP | tee /tmp/puppet-$$.log
 user{ "root":
@@ -8,4 +9,5 @@ user{ "root":
 }
 PP
 
-! grep created /tmp/puppet-$$.log
+file_lacks created /tmp/puppet-$$.log
+exit $?
