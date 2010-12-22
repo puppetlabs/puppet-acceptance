@@ -44,6 +44,18 @@ file_lacks() {
     fi
 }
 
+# tests that a given file exists
+# takes the name of the file
+file_exists()
+{
+    local filename=$1
+    if [ -e $filename ]; then
+        pass "$filename exists"
+    else
+        fail "$filename does not exist"
+    fi
+}
+
 # passes a test and sets $? to mark the success
 # takes a description
 pass()
