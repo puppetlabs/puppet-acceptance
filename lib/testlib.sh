@@ -14,15 +14,33 @@ file_contains() {
     local filename=$1
     local expected=$2
 
-    if [ -e "$filename" ]; then
-        grep -q $expected $filename > /dev/null
-        if [ $? = 0 ]; then
+    if [ ! -e "$filename" ]; then
+        fail "File $filename not found"
+    else
+        if grep -q $expected $filename > /dev/null; then
             pass "$filename contains \"$expected\""
         else
             fail "$filename does not contain \"$expected\""
         fi
-    else
+    fi
+}
+
+# tests that a file does not contain a string
+# takes the name of the file as $1
+# takes the string which the file should contain as $2
+# returns the exit code for OK or FAILURE
+file_lacks() {
+    local filename=$1
+    local expected=$2
+
+    if [ ! -e "$filename" ]; then
         fail "File $filename not found"
+    else
+        if grep -q $expected $filename > /dev/null; then
+            fail "$filename contains \"$expected\""
+        else
+            pass "$filename should not contain \"$expected\""
+        fi
     fi
 }
 
