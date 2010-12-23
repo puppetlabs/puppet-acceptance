@@ -2,13 +2,16 @@
 
 use Test::More;
 
-main();
+main( @ARGV );
 sub main
 {
-    for my $test_script (glob "t/test*.sh" )
+    my @tests = @_ ? @_ : glob "t/test*.sh";
+
+    for my $test_script (@tests)
     {
         run_one_test( $test_script );
     }
+
     done_testing();
 }
 
