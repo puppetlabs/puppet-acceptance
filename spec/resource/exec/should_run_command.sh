@@ -5,6 +5,8 @@
 set -e
 set -u
 source local_setup.sh
+source lib/testlib.sh
+
 PUPPET_SPEC_DRIVER=${DRIVER:-}
 TOUCHED_FILE=/tmp/test_exec$$
 # precondition: file to be touced should not exist.
@@ -27,4 +29,5 @@ esac
 # check output
 grep 'executed successfully' $OUTFILE
 # validate
-[ -f $TOUCHED_FILE ]
+file_exists -f $TOUCHED_FILE
+exit $?

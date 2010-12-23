@@ -1,6 +1,7 @@
 set -e
 
 source lib/setup.sh
+source lib/testlib.sh
 
 rm -f /tmp/hello.world.$$.txt
 
@@ -10,4 +11,7 @@ file{ "/tmp/hello.world.$$.txt":
 }
 PP
 
-[ -f /tmp/hello.world.$$.txt ]
+
+# the original test used -f; does -e suffice?
+file_exists /tmp/hello.world.$$.txt
+exit $?
