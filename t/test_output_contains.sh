@@ -18,6 +18,16 @@ echo $?
 output_contains echo "Hello, world!" "Goodbye"
 echo $?
 
+# this syntax is awful, but it appears to work
+heredoc=$(
+cat <<END
+This is a heredoc.
+END
+)
+
+output_contains echo "bob" $heredoc "heredoc"
+echo $?
+
 # EXPECTED RESULTS #
 # "echo" output contained "Hello"
 # 0
@@ -27,3 +37,5 @@ echo $?
 # 0
 # "echo" output did not contain "Goodbye"
 # 10
+# "echo" output contains "heredoc"
+# 0
