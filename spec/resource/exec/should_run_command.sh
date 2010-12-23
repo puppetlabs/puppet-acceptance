@@ -26,8 +26,10 @@ PP
     $BIN/puppet resource -d exec test command="/bin/touch $TOUCHED_FILE" | tee $OUTFILE 	
   ;;
 esac
+
 # check output
-grep 'executed successfully' $OUTFILE
+file_contains $OUTFILE 'executed successfully'
+
 # validate
 file_exists -f $TOUCHED_FILE
 exit $?

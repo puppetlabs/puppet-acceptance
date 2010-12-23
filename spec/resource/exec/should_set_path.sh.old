@@ -15,9 +15,10 @@ if [ -e $TOUCHED_FILE ]; then
 fi
 # puppet test
 $BIN/puppet resource exec test command="touch $TOUCHED_FILE" path='/bin/' | tee $OUTFILE 	
-# check output
-grep 'executed successfully' $OUTFILE
-# validate
 
+# check output
+file_contains $OUTFILE 'executed successfully'
+
+# validate
 file_exists $TOUCHED_FILE
 exit $?

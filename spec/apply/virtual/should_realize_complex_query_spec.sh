@@ -7,6 +7,7 @@ set -e
 set -u
 
 source lib/setup.sh
+source lib/testlib.sh
 
 HOSTFILE=/tmp/hosts-$$
 # precondition:
@@ -30,4 +31,6 @@ puppet apply <<PP
 }
 Host<| host_aliases=='two' and ip=='127.0.0.3' |>
 PP
-grep test$$2 $HOSTFILE
+
+file_contains $HOSTFILE test$$2
+exit $?

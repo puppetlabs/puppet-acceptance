@@ -4,7 +4,9 @@
 
 set -e
 set -u
+
 source lib/setup.sh
+source lib/testlib.sh
 
 FILENAME="/tmp/spec-$$-link"
 FILENAME2="/tmp/spec-$$-file"
@@ -22,4 +24,5 @@ fi
 puppet resource file $FILENAME ensure=$FILENAME2
 
 # file should have copied the contents
-grep hello$$ $FILENAME
+file_contains $FILENAME hello$$
+exit $?
