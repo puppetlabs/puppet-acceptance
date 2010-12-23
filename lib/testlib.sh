@@ -56,6 +56,23 @@ file_exists()
     fi
 }
 
+# tests that the output of a command contains a string
+# takes the command
+# takes the string to find
+output_contains()
+{
+    local last_index=$#
+    local penult_index=$(($last_index - 1))
+    local command=${@:1:$penult_index}
+    local expected=${@:$last_index:1}
+
+    if eval "$command" | grep -q $expected > /dev/null; then
+        pass "\"$1\" output contained \"$expected\""
+    else
+        fail "\"$1\" output did not contain \"$expected\""
+    fi
+}
+
 # passes a test and sets $? to mark the success
 # takes a description
 pass()
