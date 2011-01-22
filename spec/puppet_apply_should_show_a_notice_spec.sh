@@ -1,3 +1,12 @@
+#!/bin/bash
 source lib/setup.sh
+source lib/testlib.sh
 
-echo "notice 'Hello World'" | puppet apply | grep 'notice:.*Hello World'
+command=$( cat <<PP
+echo "notice 'Hello World'" | puppet apply
+PP
+)
+
+output_contains $command 'notice:.*Hello World'
+
+done_testing
