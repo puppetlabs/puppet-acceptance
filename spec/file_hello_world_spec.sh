@@ -9,6 +9,6 @@ execute_manifest <<PP
 file{'/tmp/hello.$$.txt': content => 'hello world'}
 PP
 
-file_contains 'hello world' /tmp/hello.$$.txt
+file_contains /tmp/hello.$$.txt 'hello world'
 
 done_testing
