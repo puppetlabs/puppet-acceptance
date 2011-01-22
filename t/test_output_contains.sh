@@ -37,5 +37,5 @@ echo $?
 # 0
 # "echo" output did not contain "Goodbye"
 # 10
-# "echo" output contains "heredoc"
+# "echo" output contained "heredoc"
 # 0
