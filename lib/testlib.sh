@@ -75,6 +75,53 @@ output_contains()
     fi
 }
 
+# tests that the output of applying a manifest contains a string
+# takes the manifest
+# takes a string
+manifest_output_contains()
+{
+    local last_index=$#
+    local penult_index=$(($last_index - 1))
+    local command=${@:1:$penult_index}
+    local expected=${@:$last_index:1}
+    mkdir -p /tmp/puppet-$$-standalone/manifests
+
+    if manifest_apply "$command" | grep -q "$expected" > /dev/null; then
+        pass "manifest output for \"$1\" output contained \"$expected\""
+    else
+        fail "manifest output for \"$1\" output did not contain \"$expected\""
+    fi
+}
+
+# tests that the output of applying a manifest does not contain a string
+# takes the manifest
+# takes a string
+manifest_output_lacks()
+{
+    local last_index=$#
+    local penult_index=$(($last_index - 1))
+    local command=${@:1:$penult_index}
+    local expected=${@:$last_index:1}
+
+    if manifest_apply "$command" | grep -q "$expected" > /dev/null; then
+        fail "manifest output for \"$1\" output contained \"$expected\""
+    else
+        pass "manifest output for \"$1\" output did not contain \"$expected\""
+    fi
+}
+
+# helper function to execute a manifest
+manifest_apply()
+{
+    local confdir="/tmp/puppet-$$-standalone"
+
+    mkdir -p "$confdir/manifests"
+
+    echo "$1" | puppet apply --confdir $confdir \
+      --manifestdir "$confdir/manifests" --modulepath "$confdir/modules" \
+      --verbose --debug --color false
+}
+
 # passes a test and sets $? to mark the success
 # takes a description
 pass()
