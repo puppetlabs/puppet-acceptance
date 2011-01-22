@@ -68,7 +68,7 @@ output_contains()
     local command=${@:1:$penult_index}
     local expected=${@:$last_index:1}
 
-    if eval '$command' | grep -q "$expected" > /dev/null; then
+    if eval $command | grep -q "$expected" > /dev/null; then
         pass "\"$1\" output contained \"$expected\""
     else
         fail "\"$1\" output did not contain \"$expected\""
