@@ -25,4 +25,5 @@ puppet resource file $FILENAME ensure=$FILENAME2
 
 # file should have copied the contents
 file_contains $FILENAME hello$$
-exit $?
+
+done_testing

@@ -10,4 +10,5 @@ user{ "root":
 PP
 
 file_lacks created /tmp/puppet-$$.log
-exit $?
+
+done_testing

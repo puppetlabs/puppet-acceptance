@@ -9,6 +9,8 @@ echo $?
 file_contains "README" "WARNING"
 echo $?
 
+done_testing
+
 # EXPECTED RESULTS #
 # File NOT_A_FILE not found
 # 10

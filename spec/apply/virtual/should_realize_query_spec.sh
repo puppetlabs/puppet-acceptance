@@ -21,4 +21,5 @@ Host<| ip=='127.0.0.2' |>
 PP
 
 file_contains $HOSTFILE test$$
-exit $?
+
+done_testing

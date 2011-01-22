@@ -21,4 +21,5 @@ Host<| host_aliases=='two' |>
 PP
 
 file_contains $HOSTFILE test$$
-exit $?
+
+done_testing

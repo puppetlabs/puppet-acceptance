@@ -47,4 +47,5 @@ start_puppetd
 killwait ${master_pid}
 
 file_contains "${OUTPUT}" deprecated
-exit $?
+
+done_testing

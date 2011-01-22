@@ -19,4 +19,5 @@ include x
 PP
 
 file_contains $OUTFILE "1-2"
-exit $?
+
+done_testing

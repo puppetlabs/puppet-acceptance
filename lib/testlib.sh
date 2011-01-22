@@ -6,6 +6,8 @@ set -u
 # get the constants
 source lib/setup.sh
 
+TEST_LIB_EXIT_CODE=$EXIT_OK
+
 # tests that a file contains a string
 # takes the name of the file as $1
 # takes the string which the file should contain as $2
@@ -86,5 +88,12 @@ pass()
 fail()
 {
     echo $1
+    TEST_LIB_EXIT_CODE=$EXIT_FAILURE
     return $EXIT_FAILURE
+}
+
+
+done_testing()
+{
+    exit $TEST_LIB_EXIT_CODE
 }

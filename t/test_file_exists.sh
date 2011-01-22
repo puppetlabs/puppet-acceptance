@@ -19,6 +19,8 @@ TESTFILE="IGNOREME"
 file_exists $TESTFILE
 echo $?
 
+done_testing
+
 # EXPECTED RESULTS #
 # README exists
 # 0

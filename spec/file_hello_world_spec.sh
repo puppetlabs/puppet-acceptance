@@ -10,4 +10,5 @@ file{'/tmp/hello.$$.txt': content => 'hello world'}
 PP
 
 file_contains 'hello world' /tmp/hello.$$.txt
-exit $?
+
+done_testing

@@ -17,4 +17,5 @@ puppet resource host test1 ensure=present target="/tmp/host-$$" host_aliases=ali
 
 # post-condition - ip address not specified, create should fail with message.
 file_contains /tmp/spec-$$.log 'ip is a required attribute for hosts'
-exit $?
+
+done_testing

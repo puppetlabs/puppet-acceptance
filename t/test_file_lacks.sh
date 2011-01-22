@@ -9,6 +9,8 @@ echo $?
 file_lacks "README" "WARNING"
 echo $?
 
+done_testing
+
 # EXPECTED RESULTS #
 # File NOT_A_FILE not found
 # 10

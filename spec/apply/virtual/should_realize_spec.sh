@@ -16,4 +16,5 @@ realize(Host['test$$'])
 PP
 
 file_contains $HOSTFILE test$$
-exit $?
+
+done_testing

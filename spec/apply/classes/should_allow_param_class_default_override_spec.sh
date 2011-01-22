@@ -14,4 +14,5 @@ class {x: y => '1', z => '3'}
 PP
 
 file_contains $OUTFILE "1-3"
-exit $?
+
+done_testing

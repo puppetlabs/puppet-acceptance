@@ -32,4 +32,5 @@ file_contains $OUTFILE 'executed successfully'
 
 # validate
 file_exists -f $TOUCHED_FILE
-exit $?
+
+done_testing

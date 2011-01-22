@@ -16,4 +16,5 @@ output_contains puppet apply $rule "defined content as '{md5}098f6bcd4621d373cad
 
 # the original test used -f; does -e suffice?
 file_exists /tmp/hello.world.$$.txt
-exit $?
+
+done_testing

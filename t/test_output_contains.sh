@@ -28,6 +28,8 @@ END
 output_contains echo "bob" $heredoc "heredoc"
 echo $?
 
+done_testing
+
 # EXPECTED RESULTS #
 # "echo" output contained "Hello"
 # 0

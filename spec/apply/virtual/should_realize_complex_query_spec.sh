@@ -33,4 +33,5 @@ Host<| host_aliases=='two' and ip=='127.0.0.3' |>
 PP
 
 file_contains $HOSTFILE test$$2
-exit $?
+
+done_testing

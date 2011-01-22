@@ -17,4 +17,5 @@ $BIN/puppet resource group $GROUP ensure=absent > $OUTFILE
 
 # VALIDATE
 file_lacks $OUTFILE "notice: /Group[$GROUP]/ensure: removed"
-exit $?
+
+done_testing
