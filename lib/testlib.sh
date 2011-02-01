@@ -84,12 +84,12 @@ manifest_output_contains()
     local penult_index=$(($last_index - 1))
     local command=${@:1:$penult_index}
     local expected=${@:$last_index:1}
-    mkdir -p /tmp/puppet-$$-standalone/manifests
+    local output=$(manifest_apply "$command")
 
-    if manifest_apply "$command" | grep -q "$expected" > /dev/null; then
-        pass "manifest output for \"$1\" output contained \"$expected\""
+    if echo $output | grep -q "$expected" > /dev/null; then
+        pass "manifest output for \"$1\" contained \"$expected\""
     else
-        fail "manifest output for \"$1\" output did not contain \"$expected\""
+        fail "manifest output for \"$1\" did not contain \"$expected\""
     fi
 }
 
@@ -102,11 +102,12 @@ manifest_output_lacks()
     local penult_index=$(($last_index - 1))
     local command=${@:1:$penult_index}
     local expected=${@:$last_index:1}
+    local output=$(manifest_apply "$command")
 
-    if manifest_apply "$command" | grep -q "$expected" > /dev/null; then
-        fail "manifest output for \"$1\" output contained \"$expected\""
+    if echo $output | grep -q "$expected" > /dev/null; then
+        fail "manifest output for \"$1\" contained \"$expected\""
     else
-        pass "manifest output for \"$1\" output did not contain \"$expected\""
+        pass "manifest output for \"$1\" did not contain \"$expected\""
     fi
 }
 
@@ -116,10 +117,11 @@ manifest_apply()
     local confdir="/tmp/puppet-$$-standalone"
 
     mkdir -p "$confdir/manifests"
+    echo "<$1>"
 
     echo "$1" | puppet apply --confdir $confdir \
       --manifestdir "$confdir/manifests" --modulepath "$confdir/modules" \
-      --verbose --debug --color false
+      --color false
 }
 
 # passes a test and sets $? to mark the success
