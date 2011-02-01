@@ -117,7 +117,6 @@ manifest_apply()
     local confdir="/tmp/puppet-$$-standalone"
 
     mkdir -p "$confdir/manifests"
-    echo "<$1>"
 
     echo "$1" | puppet apply --confdir $confdir \
       --manifestdir "$confdir/manifests" --modulepath "$confdir/modules" \
