@@ -5,8 +5,9 @@ set -e
 # we are testing that resources declared in a class
 # can be applied with an include statement
 source lib/setup.sh
-OUTFILE=/tmp/class_param_use-$$
-puppet apply <<PP | tee $OUTFILE
+source lib/testlib.sh
+
+command=$( cat <<PP
 class parent {
   notify { 'msg':
     message => parent,
@@ -18,4 +19,7 @@ class child inherits parent {
 include parent
 include child
 PP
-grep "defined 'message' as 'child'" $OUTFILE
+)
+
+manifest_output_contains $command "defined 'message' as 'child'"
+done_testing

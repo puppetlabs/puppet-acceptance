@@ -3,10 +3,9 @@ set -u
 set -e
 
 source lib/setup.sh
+source lib/testlib.sh
 
-OUTFILE="/tmp/spec-$$.log"
-
-puppet apply <<PP | tee $OUTFILE
+command=$( cat <<PP
 if( 1 == 3) {
   notice('if')
 } elsif(2 == 2) {
@@ -15,4 +14,7 @@ if( 1 == 3) {
   notice('else')
 }
 PP
-grep 'elsif' $OUTFILE
+)
+
+manifest_output_contains $command 'elsif'
+done_testing

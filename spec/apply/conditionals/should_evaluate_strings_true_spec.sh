@@ -3,14 +3,16 @@
 #  test that the string 'false' evaluates to true
 #
 source lib/setup.sh
+source lib/testlib.sh
 
-OUTFILE="/tmp/spec-$$.log"
-
-puppet <<PP | tee $OUTFILE
+command=$( cat <<PP
 if 'false' {
   notice('true')
 } else {
   notice('false')
 }
 PP
-grep 'true' $OUTFILE
+)
+
+manifest_output_contains $command 'true'
+done_testing

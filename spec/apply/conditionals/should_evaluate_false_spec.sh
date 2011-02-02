@@ -3,13 +3,15 @@
 #  test that false evaluates to false
 #
 source lib/setup.sh
+source lib/testlib.sh
 
-OUTFILE="/tmp/spec-$$.log"
-
-puppet <<PP | tee $OUTFILE
+command=$( cat <<PP
 if false {
 } else {
   notice('false')
 }
 PP
-grep 'false' $OUTFILE
+)
+
+manifest_output_contains $command 'false'
+done_testing

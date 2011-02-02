@@ -1,12 +1,14 @@
 #!/bin/bash
 source lib/setup.sh
+source lib/testlib.sh
 
-OUTFILE="/tmp/spec-$$.log"
-
-puppet apply <<PP | tee $OUTFILE
+command=$( cat <<PP
 if '' {
 } else {
   notice('empty')
 }
 PP
-grep empty $OUTFILE
+)
+
+manifest_output_contains $command 'empty'
+done_testing

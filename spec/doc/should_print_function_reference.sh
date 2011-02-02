@@ -1,5 +1,7 @@
 #!/bin/bash
 
 source lib/setup.sh
+source lib/testlib.sh
 
-puppet doc -r function | grep 'Function Reference'
+output_contains "puppet doc -r function" 'Function Reference'
+done_testing

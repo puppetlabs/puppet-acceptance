@@ -4,11 +4,15 @@ set -e
 # we are testing that resources declared in a class
 # can be applied with an include statement
 source lib/setup.sh
-OUTFILE=/tmp/class_param_use-$$
-puppet apply <<PP | tee $OUTFILE
+source lib/testlib.sh
+
+command=$( cat <<PP
 class x(\$y, \$z) {
   notice("\${y}-\${z}")
 }
 class {x: y => '1', z => '2'}
 PP
-grep "1-2" $OUTFILE
+)
+
+manifest_output_contains $command "1-2"
+done_testing

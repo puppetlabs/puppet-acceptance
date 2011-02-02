@@ -1,10 +1,9 @@
 #!/bin/bash
 
 source lib/setup.sh
+source lib/testlib.sh
 
-OUTFILE="/tmp/spec-$$.log"
-
-puppet apply <<PP | tee $OUTFILE
+command=$( cat <<PP
 if( 1 == 1) {
   notice('if')
 } elsif(2 == 2) {
@@ -13,4 +12,7 @@ if( 1 == 1) {
   notice('else')
 }
 PP
-grep 'if' $OUTFILE
+)
+
+manifest_output_contains $command 'if'
+done_testing

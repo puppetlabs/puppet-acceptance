@@ -7,13 +7,15 @@ set -e
 set -u
 
 source lib/setup.sh
+source lib/testlib.sh
 
-OUTFILE="/tmp/spec-$$.log"
-
-puppet apply <<PP | tee $OUTFILE
+command=$( cat <<PP
 if \$undef_var {
 } else {
   notice('undef')
 }
 PP
-grep 'undef' $OUTFILE
+)
+
+manifest_output_contains $command 'undef'
+done_testing
