@@ -89,7 +89,8 @@ manifest_output_contains()
     if echo $output | grep -q "$expected" > /dev/null; then
         pass "manifest output for \"$1\" contained \"$expected\""
     else
-        fail "manifest output for \"$1\" did not contain \"$expected\""
+        fail "manifest output for \"$1\" did not contain \"$expected\"" \
+            "$command" "$output"
     fi
 }
 
@@ -102,10 +103,11 @@ manifest_output_lacks()
     local penult_index=$(($last_index - 1))
     local command=${@:1:$penult_index}
     local expected=${@:$last_index:1}
-    local output=$(manifest_apply "$command")
+    local output=$( manifest_apply "$command" )
 
-    if echo $output | grep -q "$expected" > /dev/null; then
-        fail "manifest output for \"$1\" contained \"$expected\""
+    if echo "$output" | grep -q "$expected" > /dev/null; then
+        fail "manifest output for \"$1\" contained \"$expected\"" \
+            "$command" "$output"
     else
         pass "manifest output for \"$1\" did not contain \"$expected\""
     fi
@@ -135,7 +137,9 @@ pass()
 # takes a description
 fail()
 {
-    echo $1
+    for arg; do
+        echo "$arg"
+    done
     TEST_LIB_EXIT_CODE=$EXIT_FAILURE
     return $EXIT_FAILURE
 }

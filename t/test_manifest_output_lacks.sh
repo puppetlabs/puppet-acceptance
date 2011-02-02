@@ -20,4 +20,7 @@ done_testing
 # manifest output for "notify" did not contain "Goodbye, world!"
 # 0
 # manifest output for "notify" contained "Hello, world!"
+# notify {'Hello, world!':}
+# notice: Hello, world!
+# notice: /Stage[main]//Notify[Hello, world!]/message: defined 'message' as 'Hello, world!'
 # 10
