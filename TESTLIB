@@ -1,0 +1,93 @@
+How to Use testlib.sh
+---------------------
+
+The proof of concept testlib.sh adds several Bash functions to make testing
+(and, especially, test reporting) much more convenient. These functions
+demonstrate several design principles:
+
+    * the simpler tests are to write, the easier they are to write correctly
+
+    * hiding testing boilerplate behind abstractions exposes the intent of the
+      tests more directly
+
+    * the less shell-specific syntax in the test files, the easier they will be
+      to port to another language or framework in the future
+
+    * providing diagnostic output on failure (or unintended success) is
+      important to debugging tests
+
+    * successful test runs should be silent
+
+As such, the test functions share a common backend mechanism for reporting
+success or failure as well as a consistent API of the form:
+
+    test_function $haystack $needle
+
+... where the test_function transforms the contents of $haystack somehow to
+look for $needle.
+
+Assertions versus Files
+-----------------------
+
+To some extent the existing tests follow these principles, though they are
+often inconsistent about providing diagnostic information. They do demonstrate
+an interesting principle of test composition, however: when one test file
+contains multiple test assertions, which assertion governs the exit code of the
+process? As the test runner uses this exit code to determine the success or
+failure of the test, using multiple assertions in a test file--whether it makes
+sense in terms of the test--was an exercise in complication.
+
+testlib.sh fixes this with the done_testing function. This function must occur
+at the end of a test file. It exits with the appropriate error code: if any
+assertions in the test file have failed, it exits with an error. Otherwise, it
+exits successfully. This allows the seamless composition of multiple assertions
+in a single file.
+
+Assertion Functions
+-------------------
+
+file_contains $filename $needle
+    - will fail unless the file exists
+
+file_lacks    $filename $needle
+    - will fail unless the file exists
+
+These two functions test that the file named by $filename contains the string
+$needle. The former succeeds if $needle is in the contents of $filename. The
+latter succeeds if $needle is not in the contents of $filename. Both functions
+fail if $filename does not exist.
+
+file_exists   $filename
+
+This function tests that the file named by $filename exists. It checks no other
+permissions.
+
+output_contains $command $needle
+
+output_lacks    $command $needle
+
+These two functions perform the given shell command in $command, then check its
+standard output for $needle. Neither function checks the error status of the
+command. While both functions go to some work to allow the passing of multiple
+arguments to $command (such that only the final argument to the function is
+$needle), tests read more clearly when $command is a single argument. One
+effective idiom is to assign to a variable in a separate step:
+
+    command=$( cat <<HEREDOC
+        your command here
+    HEREDOC
+    )
+
+    output_contains $command $needle
+
+Due to quirks of shell quoting and interpolation and newline handling, assume
+that this is the safest and most portable mechanism of specifying command
+arguments.
+
+manifest_output_contains $manifest $needle
+
+manifest_output_lacks    $manifest $needle
+
+These functions run puppet --apply, giving $manifest as a command, then search
+the standard output for $needle. The caveats of defining $command for
+command_output_contains and command_output_lacks apply here.
