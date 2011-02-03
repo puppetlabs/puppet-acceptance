@@ -73,6 +73,23 @@ output_contains()
     fi
 }
 
+# tests that the output of a command does not contain a string
+# takes the command
+# takes the string to find
+output_lacks()
+{
+    local last_index=$#
+    local penult_index=$(($last_index - 1))
+    local command=${@:1:$penult_index}
+    local expected=${@:$last_index:1}
+
+    if eval $command | grep -q "$expected" > /dev/null; then
+        fail "\"$1\" output contained \"$expected\""
+    else
+        pass "\"$1\" output did not contain \"$expected\""
+    fi
+}
+
 # tests that the output of applying a manifest contains a string
 # takes the manifest
 # takes a string
