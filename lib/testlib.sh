@@ -11,7 +11,6 @@ TEST_LIB_EXIT_CODE=$EXIT_OK
 # tests that a file contains a string
 # takes the name of the file as $1
 # takes the string which the file should contain as $2
-# returns the exit code for OK or FAILURE
 file_contains() {
     local filename=$1
     local expected=$2
@@ -30,7 +29,6 @@ file_contains() {
 # tests that a file does not contain a string
 # takes the name of the file as $1
 # takes the string which the file should contain as $2
-# returns the exit code for OK or FAILURE
 file_lacks() {
     local filename=$1
     local expected=$2
