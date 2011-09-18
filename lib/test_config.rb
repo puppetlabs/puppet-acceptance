@@ -8,8 +8,7 @@ module TestConfig
       :auth_methods          => ["publickey"],
       :keys                  => [Options.parse_args[:keyfile]],
       :port                  => 22,
-      :user_known_hosts_file => "#{ENV['HOME']}/.ssh/known_hosts",
-      :forward_agent         => true
+      :user_known_hosts_file => "#{ENV['HOME']}/.ssh/known_hosts"
     }
   end
 
