@@ -42,6 +42,11 @@ if options[:vmrun]
   vminfo_h.each do |key, val|
     step "Reverting VM: #{key} with Domain: #{val} on VM server #{vmserver}"
     system("lib/virsh_exec.exp #{vmserver} snapshot-revert #{val} #{snapshot}")
+    if $? != 0
+      Log.warn "Failed to revert the #{val} #{snapshot} on #{vmserver}."
+      Log.warn "Fatal condition...exiting."
+      exit 1
+    end
   end
 else
   Log.notify "Skipping revert VM step"  
