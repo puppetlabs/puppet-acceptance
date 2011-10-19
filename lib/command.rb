@@ -15,6 +15,11 @@ class Command
     host.exec(cmd_line(host), options[:stdin])
   end
 
+  def exec_pty(host, options={})
+    host.exec_pty(cmd_line(host), options[:stdin])
+  end
+
+
   # Determine the appropriate puppet env command for the given host.
   def puppet_env_command(host_info)
     rubylib = [host_info['pluginlibpath'], host_info['puppetlibdir'], host_info['facterlibdir'],'$RUBYLIB'].compact.join(':')
