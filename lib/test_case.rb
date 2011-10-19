@@ -117,6 +117,35 @@ class TestCase
     end
   end
 
+  def on_pty(host, command, options={}, &block)
+    options[:acceptable_exit_codes] ||= [0]
+    options[:failing_exit_codes]    ||= [1]
+    if command.is_a? String
+      command = Command.new(command)
+    end
+    if host.is_a? Array
+      host.map { |h| on h, command, options, &block }
+    else
+      @result = command.exec_pty(host, options)
+
+      unless options[:silent] then
+        result.log
+        if options[:acceptable_exit_codes].include?(exit_code)
+          # cool.
+        elsif options[:failing_exit_codes].include?(exit_code)
+          assert( false, "Host '#{host} exited with #{exit_code} running: #{command.cmd_line('')}" )
+        else
+          raise "Host '#{host}' exited with #{exit_code} running: #{command.cmd_line('')}"
+        end
+      end
+
+      # Also, let additional checking be performed by the caller.
+      yield if block_given?
+
+      return @result
+    end
+  end
+
   def scp_to(host,from_path,to_path,options={})
     if host.is_a? Array
       host.each { |h| scp_to h,from_path,to_path,options }
