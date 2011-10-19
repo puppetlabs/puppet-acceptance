@@ -117,7 +117,6 @@ class TestCase
     end
   end
 
-  attr_reader :result
   def on_pty(host, command, options={}, &block)
     options[:acceptable_exit_codes] ||= [0]
     options[:failing_exit_codes]    ||= [1]
