@@ -83,8 +83,7 @@ class TestCase
         # channel is finished with...
         ssh.loop
       end
-    end
-
+    end 
 
     def do_scp(source, target)
       do_action("ScpFile",source,target) { |result|

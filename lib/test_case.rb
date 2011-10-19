@@ -124,7 +124,7 @@ class TestCase
       command = Command.new(command)
     end
     if host.is_a? Array
-      host.map { |h| on h, command, options, &block }
+      host.map { |h| on_pty h, command, options, &block }
     else
       @result = command.exec_pty(host, options)
 
