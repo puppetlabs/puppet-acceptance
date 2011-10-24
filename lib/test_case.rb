@@ -91,6 +91,7 @@ class TestCase
   def on(host, command, options={}, &block)
     options[:acceptable_exit_codes] ||= [0]
     options[:failing_exit_codes]    ||= [1]
+    options[:request_pty] ||= 0
     if command.is_a? String
       command = Command.new(command)
     end

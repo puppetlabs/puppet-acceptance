@@ -36,9 +36,14 @@ class TestCase
       result
     end
 
-    def exec(command, stdin)
+    def exec(command, options)
       do_action('RemoteExec',command) do |result|
         ssh.open_channel do |channel|
+          if options[:request_pty] == 1 then
+          Log.warn("===opening pseudo TTY====")
+          channel.request_pty
+          end
+          stdin=options[:stdin]
           channel.exec(command) do |terminal, success|
             abort "FAILED: to execute command on a new channel on #{@name}" unless success
             terminal.on_data                   { |ch, data|       result.stdout << data }
