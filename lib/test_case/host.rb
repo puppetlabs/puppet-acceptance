@@ -60,6 +60,31 @@ class TestCase
       end
     end
 
+    def exec_pty(command, stdin)
+      do_action('RemoteExec',command) do |result|
+        ssh.open_channel do |channel|
+	channel.request_pty
+          channel.exec(command) do |terminal, success|
+            abort "FAILED: to execute command on a new channel on #{@name}" unless success
+            terminal.on_data                   { |ch, data|       result.stdout << data }
+            terminal.on_extended_data          { |ch, type, data| result.stderr << data if type == 1 }
+            terminal.on_request("exit-status") { |ch, data|       result.exit_code = data.read_long  }
+
+            # queue stdin data, force it to packets, and signal eof: this
+            # triggers action in many remote commands, notably including
+            # 'puppet apply'.  It must be sent at some point before the rest
+            # of the action.
+            terminal.send_data(stdin.to_s)
+            terminal.process
+            terminal.eof!
+          end
+        end
+        # Process SSH activity until we stop doing that - which is when our
+        # channel is finished with...
+        ssh.loop
+      end
+    end 
+
     def do_scp(source, target)
       do_action("ScpFile",source,target) { |result|
         # Net::Scp always returns 0, so just set the return code to 0 Setting
