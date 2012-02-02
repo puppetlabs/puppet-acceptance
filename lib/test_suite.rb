@@ -39,16 +39,29 @@ class TestSuite
 
     initialize_logfiles
 
+
+
     Log.notify "Using random seed #{@random_seed}" if @random_seed
     @test_files.each do |test_file|
       Log.notify
       Log.notify "Begin #{test_file}"
       start = Time.now
+
+      # this is a hook to let the host object know that we're about to start a new test; can be used for test-specific
+      #  state modification
+      @hosts.each { |host| host.before_test(test_file) }
+
       test_case = TestCase.new(@hosts, config, options, test_file).run_test
+
+      # this is a hook to let the host object know that we've finished a test.  could be used to clean up test-specific
+      #  state such as temp dirs, etc.
+      @hosts.each { |host| host.after_test(test_file, test_case.test_status) }
+
       duration = Time.now - start
       @test_cases << test_case
 
       msg = "#{test_file} #{test_case.test_status == :skip ? 'skipp' : test_case.test_status}ed in %.2f seconds" % duration.to_f
+
       case test_case.test_status
       when :pass
         Log.success msg
@@ -62,6 +75,8 @@ class TestSuite
         break if stop_on_error
       end
     end
+
+
 
     # REVISIT: This changes global state, breaking logging in any future runs
     # of the suite – or, at least, making them highly confusing for anyone who
