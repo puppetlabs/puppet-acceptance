@@ -78,5 +78,17 @@ class Log
         print NORMAL if color
       end
     end
+
+
+    def deprecation_warning(message)
+      $deprecation_warnings ||= Hash.new(0)
+      if $deprecation_warnings.length < 100 and ($deprecation_warnings[message] += 1) == 1
+        warn message
+      end
+    end
+
+    def clear_deprecation_warnings
+      $deprecation_warnings.clear if $deprecation_warnings
+    end
   end
 end

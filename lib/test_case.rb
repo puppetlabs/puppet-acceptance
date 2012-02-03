@@ -1,5 +1,5 @@
 class TestCase
-  require 'lib/test_case/host'
+  require 'lib/host'
   require 'tempfile'
   require 'benchmark'
   require 'stringio'
@@ -90,8 +90,6 @@ class TestCase
   #
   attr_reader :result
   def on(host, command, options={}, &block)
-    options[:acceptable_exit_codes] ||= [0]
-    options[:failing_exit_codes]    ||= [1]
     if command.is_a? String
       command = Command.new(command)
     end
@@ -99,17 +97,6 @@ class TestCase
       host.map { |h| on h, command, options, &block }
     else
       @result = command.exec(host, options)
-
-      unless options[:silent] then
-        result.log
-        if options[:acceptable_exit_codes].include?(exit_code)
-          # cool.
-        elsif options[:failing_exit_codes].include?(exit_code)
-          assert( false, "Host '#{host} exited with #{exit_code} running: #{command.cmd_line('')}" )
-        else
-          raise "Host '#{host}' exited with #{exit_code} running: #{command.cmd_line('')}"
-        end
-      end
 
       # Also, let additional checking be performed by the caller.
       yield if block_given?
@@ -136,7 +123,7 @@ class TestCase
     @test_status = :skip
   end
   def fail_test(msg)
-    assert(false, msg)
+    flunk(msg + "\n" + pretty_backtrace() + "\n")
   end
   #
   # result access
@@ -270,11 +257,37 @@ class TestCase
     end
   end
 
+  # This method performs the following steps:
+  # 1. issues start command for puppet master on specified host
+  # 2. polls until it determines that the master has started successfully
+  # 3. yields to a block of code passed by the caller
+  # 4. runs a "kill" command on the master's pid (on the specified host)
+  # 5. polls until it determines that the master has shut down successfully.
+  #
+  # Parameters:
+  # [host] the master host
+  # [arg] a string containing all of the command line arguments that you would like for the puppet master to
+  #     be started with.  Defaults to '--daemonize'.  NOTE: the following values will be added to the argument list
+  #     if they are not explicitly set in your 'args' parameter:
+  # * --daemonize
+  # * --logdest="#{host['puppetvardir']}/log/puppetmaster.log"
+  # * --dns_alt_names="puppet, $(hostname -s), $(hostname -f)"
+  # * --autosign=true
   def with_master_running_on(host, arg='--daemonize', &block)
+    # they probably want to run with daemonize.  If they pass some other arg/args but forget to re-include
+    # daemonize, we'll check and make sure they didn't explicitly specify "no-daemonize", and, failing that,
+    # we'll add daemonize to the arg string
+    if (arg !~ /(?:--daemonize)|(?:--no-daemonize)/) then arg << " --daemonize" end
+
+    if (arg !~ /--logdest/) then arg << " --logdest=\"#{master['puppetvardir']}/log/puppetmaster.log\"" end
+    if (arg !~ /--dns_alt_names/) then arg << " --dns_alt_names=\"puppet, $(hostname -s), $(hostname -f)\"" end
+    if (arg !~ /--autosign/) then arg << " --autosign=true" end
+
     on hosts, host_command('rm -rf #{host["puppetpath"]}/ssl')
     agents.each do |agent|
-      if vardir = agent['puppetvardir']
-        on agent, "rm -rf #{vardir}/*"
+      if ((vardir = agent['puppetvardir']) && File.exists?(vardir))
+        # we want to remove everything except the log directory
+        on agent, "for f in #{vardir}/*; do if [ \"$f\" != \"#{vardir}/log\" ]; then rm -r \"$f\"; fi; done"
       end
     end
 
@@ -318,6 +331,8 @@ class TestCase
   end
 
   def create_remote_file(hosts, file_path, file_content)
+    Log.deprecation_warning("create_remote_file is deprecated in favor of Host::*::create_test_file " +
+          "or Host::*::create_file")
     Tempfile.open 'puppet-acceptance' do |tempfile|
       File.open(tempfile.path, 'w') { |file| file.puts file_content }
 
@@ -344,4 +359,42 @@ class TestCase
 
     return result
   end
+
+
+  # utility method to get the current call stack and format it to a human-readable string (which some IDEs/editors
+  # will recognize as links to the line numbers in the trace)
+  def pretty_backtrace()
+
+    caller(1).collect do |line|
+      file_path, line_num = line.split(":")
+      file_path = expand_symlinks(File.expand_path(file_path))
+
+      file_path + ":" + line_num
+    end .join("\n")
+
+  end
+  private :pretty_backtrace
+
+  # utility method that takes a path as input, checks each component of the path to see if it is a symlink, and expands
+  # it if it is.  returns the expanded path.
+  def expand_symlinks(file_path)
+    file_path.split("/").inject do |full_path, next_dir|
+      next_path = full_path + "/" + next_dir
+      if File.symlink?(next_path) then
+        link = File.readlink(next_path)
+        next_path =
+            case link
+              when /^\// then link
+              else
+                File.expand_path(full_path + "/" + link)
+            end
+      end
+      next_path
+    end
+  end
+  private :expand_symlinks
+
+
+
+
 end
