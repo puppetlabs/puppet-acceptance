@@ -1,11 +1,11 @@
-unless options[:notimesync]
+if options[:timesync]
   test_name "Update system time sync"
   step "run ntpdate against NTP pool systems"
   hosts.each do |host|
     if host['platform'].include? 'solaris'
-      on(host, "sleep 10 && ntpdate -w us.pool.ntp.org")
+      on(host, "sleep 10 && ntpdate -w #{options[:ntpserver]}")
     else
-      on(host, "ntpdate -t 5 us.pool.ntp.org")
+      on(host, "ntpdate -t 5 #{options[:ntpserver]}")
     end
   end
 else

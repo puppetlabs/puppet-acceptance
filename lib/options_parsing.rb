@@ -106,9 +106,14 @@ class Options
         @options[:mrpropper] = TRUE
       end
 
-      @options[:notimesync] = FALSE
-      opts.on( '--no-ntp', 'skip ntpdate step' ) do
-        @options[:notimesync] = TRUE
+      @options[:ntpserver] = 'ntp.puppetlabs.lan'
+      opts.on( '--ntp-server host', 'NTP server name' ) do |server|
+        @options[:ntpserver] = server
+      end
+
+      @options[:timesync] = FALSE
+      opts.on( '--ntp', 'run ntpdate step' ) do
+        @options[:timesync] = TRUE
       end
 
       @options[:stdout_only] = false
