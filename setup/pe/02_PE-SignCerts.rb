@@ -11,7 +11,7 @@ step "Puppet Master/Dashboard single host:  Sign Requested Agent Certs"
 hosts.each do |host| 
   # Master auto signs its own cert on startup
   next if host['roles'].include? 'master'
-  on master, puppet("cert --sign #{host}") do
+  on master, puppet("cert --sign --all") do
     assert_no_match(/Could not call sign/, stdout, "Unable to sign cert for #{host}")
   end
 end
