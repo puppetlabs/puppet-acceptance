@@ -49,12 +49,12 @@ q_puppet_enterpriseconsole_master_hostname=MASTER
 q_puppet_enterpriseconsole_inventory_certname=`uname | grep -i sunos > /dev/null && hostname || hostname -s`
 q_puppet_enterpriseconsole_inventory_dnsaltnames=MASTER
 ] + %Q[
-q_puppet_enterpriseconsole_auth_user='#{ENV['q_puppet_enterpriseconsole_auth_user'] || 'console'}'
+q_puppet_enterpriseconsole_auth_user='#{ENV['q_puppet_enterpriseconsole_auth_user'] || 'admin@example.com'}'
 q_puppet_enterpriseconsole_httpd_port=#{portno}
 q_puppet_enterpriseconsole_smtp_host='#{ENV['q_puppet_enterpriseconsole_smtp_host'] || 'DASHBOARD'}'
 q_puppet_enterpriseconsole_smtp_use_tls='#{ENV['q_puppet_enterpriseconsole_smtp_use_tls'] || 'n'}'
 q_puppet_enterpriseconsole_smtp_port='#{ENV['q_puppet_enterpriseconsole_smtp_port'] || '25'}'
-q_puppet_enterpriseconsole_smtp_username='#{ENV['q_puppet_enterpriseconsole_smtp_username'] || 'console'}'
+q_puppet_enterpriseconsole_smtp_username='#{ENV['q_puppet_enterpriseconsole_smtp_username'] || 'console-mailer@example.com'}'
 q_puppet_enterpriseconsole_smtp_password='#{ENV['q_puppet_enterpriseconsole_smtp_password'] || '~!@#$%^*-/aZ'}'
 ]
 
