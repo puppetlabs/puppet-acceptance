@@ -24,8 +24,16 @@ module TestConfig
     config['CONFIG']['puppet_ver'] = Options.parse_args[:puppet] unless is_pe?
     config['CONFIG']['facter_ver'] = Options.parse_args[:facter] unless is_pe?
     # need to load expect versions of PE binaries
-    config['VERSION'] = YAML.load_file('ci/pe/pe_version') rescue nil if is_pe?
+    config['VERSION'] = load_dependency_versions
     config
+  end
+
+  def self.load_dependency_versions
+    if is_pe?
+      version_file = ENV['pe_dep_versions'] || 'config/versions/pe_version'
+      versions = YAML.load_file version_file
+      versions
+    end
   end
 
   def self.is_pe?
