@@ -150,6 +150,7 @@ test_name "Revert VMs"
 
     fleet = Blimpy.fleet do |fleet|
       hosts.each do |host|
+        host[:external] = true
         amisize = host["amisize"] || 'm1.small'
         ami = AMI[host['platform']]
         fleet.add(:aws) do |ship|
