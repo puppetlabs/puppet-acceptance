@@ -8,16 +8,18 @@ module PuppetAcceptance
   #   * File Creation Relative to CWD  -- Should be a config option
   #   * Better Method Documentation
   class TestSuite
-    attr_reader :name, :options, :config, :stop_on_error
+    attr_reader :hosts, :logger, :name, :options, :config, :stop_on_error,
+                :run_statuses
 
-    def initialize(name, hosts, options, config, stop_on_error=false)
-      @name    = name.gsub(/\s+/, '-')
-      @hosts   = hosts
-      @run     = false
-      @options = options
-      @config  = config
+    def initialize(name, hosts, options, config, run_statuses, stop_on_error=false)
+      @run_statuses  = run_statuses
+      @name          = name.gsub(/\s+/, '-')
+      @hosts         = hosts
+      @run           = false
+      @options       = options
+      @config        = config
       @stop_on_error = stop_on_error
-      @logger = options[:logger]
+      @logger        = options[:logger]
 
       @test_cases = []
       @test_files = []
@@ -53,7 +55,7 @@ module PuppetAcceptance
         @logger.notify
         @logger.notify "Begin #{test_file}"
         start = Time.now
-        test_case = TestCase.new(@hosts, @logger, config, options, test_file).run_test
+        test_case = TestCase.new(self, test_file).run_test
         duration = Time.now - start
         @test_cases << test_case
 
