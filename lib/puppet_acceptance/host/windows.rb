@@ -35,11 +35,21 @@ module Windows
     }
 
     def initialize name, config_overrides, host_overrides, logger, is_pe
-      @is_pe  = is_pe
-      @name   = name
-      @logger = logger
-      defaults = is_pe? ? PE_DEFALTS : FOSS_DEFAULTS
+      confused_name, version, arch = host_overrides['platform'].split('-')
+      @is_pe    = is_pe
+      @name     = name
+      @logger   = logger
+      defaults  = is_pe? ? PE_DEFAULTS : FOSS_DEFAULTS
+      defaults['version'] = version
+      defaults['arch']    = arch
+      defaults['family']  = get_family( confused_name )
+      defaults['release'] = get_release( confused_name, version )
+
       @defaults = defaults.merge(config_overrides).merge(host_overrides)
+    end
+
+    def get_release maybe_an_os, version
+      return version
     end
   end
 end

@@ -24,6 +24,21 @@ module PuppetAcceptance
     attr_accessor :logger
     attr_reader :name, :defaults
 
+    def get_family a_name_that_confuses_os_and_family
+      return case a_name_that_confuses_os_and_family
+             when /debian|ubuntu/
+               'debian'
+             when /el-\d/
+               'el'
+             when /s(les|use)-/
+               'suse'
+             when /solaris/
+               'solaris'
+             when /windows/
+               'windows'
+             end
+    end
+
     def node_name
       # TODO: might want to consider caching here; not doing it for now because
       #  I haven't thought through all of the possible scenarios that could

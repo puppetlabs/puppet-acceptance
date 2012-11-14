@@ -35,11 +35,39 @@ module Unix
     }
 
     def initialize name, config_overrides, host_overrides, logger, is_pe
-      @is_pe  = is_pe
-      @name   = name
-      @logger = logger
-      defaults = is_pe? ? PE_DEFAULTS : FOSS_DEFAULTS
+      confused_name, version, arch = host_overrides['platform'].split('-')
+      @is_pe    = is_pe
+      @name     = name
+      @logger   = logger
+      defaults  = is_pe? ? PE_DEFAULTS : FOSS_DEFAULTS
+      defaults['version'] = version
+      defaults['arch']    = arch
+      defaults['family']  = get_family( confused_name )
+      defaults['release'] = get_release( confused_name, version )
+
       @defaults = defaults.merge(config_overrides).merge(host_overrides)
+    end
+
+    def get_release maybe_an_os, version
+      case maybe_an_os
+      when /debian/
+        return 'lenny'    if version.to_i == 5
+        return 'squeeze'  if version.to_i == 6
+        return 'wheezy'   if version.to_i == 7
+      when /ubuntu/
+        return 'hardy'    if version =~ /8\.04/
+        return 'lucid'    if version =~ /10\.04/
+        return 'maverick' if version =~ /10\.10/
+        return 'natty'    if version =~ /11\.04/
+        return 'oneiric'  if version =~ /11\.10/
+        return 'precise'  if version =~ /12\.04/
+        return 'quantal'  if version =~ /12\.10/
+      when /el/
+        return '5.6'      if version.to_i == 5
+        return '6.6'      if version.to_i == 6
+      else
+        return version
+      end
     end
   end
 end
