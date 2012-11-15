@@ -51,9 +51,9 @@ module Unix
     def get_release maybe_an_os, version
       case maybe_an_os
       when /debian/
-        return 'lenny'    if version.to_i == 5
-        return 'squeeze'  if version.to_i == 6
-        return 'wheezy'   if version.to_i == 7
+        return 'lenny'    if version == '5'
+        return 'squeeze'  if version == '6'
+        return 'wheezy'   if version == '7'
       when /ubuntu/
         return 'hardy'    if version =~ /8\.04/
         return 'lucid'    if version =~ /10\.04/
@@ -63,8 +63,8 @@ module Unix
         return 'precise'  if version =~ /12\.04/
         return 'quantal'  if version =~ /12\.10/
       when /el/
-        return '5.6'      if version.to_i == 5
-        return '6.6'      if version.to_i == 6
+        return '5-6'      if version == '5'
+        return '6-6'      if version == '6'
       else
         return version
       end
