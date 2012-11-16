@@ -27,7 +27,7 @@ module PuppetAcceptance
     def get_family a_name_that_confuses_os_and_family
       return case a_name_that_confuses_os_and_family
              when /debian|ubuntu/
-               'debian'
+               'deb'
              when /el-\d/
                'el'
              when /s(les|use)-/
