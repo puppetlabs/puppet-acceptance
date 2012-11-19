@@ -11,17 +11,21 @@ ips_pkg_repo="http://solaris-11-internal-repo.acctest.dc1.puppetlabs.net"
 debug_opt = options[:debug] ? 'vh' : ''
 
 def puppetlabs_repo_url host
-  if host['family'] == 'el'
+  if host['family'] =~ /el/i
     pkg  = "puppetlabs-release-#{host['release']}.noarch.rpm"
     base = "http://yum.puppetlabs.com/el"
     blah = "#{host['version']}/products/#{host['arch']}"
     url  = "#{base}/#{blah}/#{pkg}"
-    return pkg, url
-  elsif host['family'] == 'debian'
+    logger.warn "These are the return values for puppetlabs_repo_url: #{url} and #{pkg}"
+    return [ pkg, url ]
+  elsif host['family'] =~ /deb/i
     pkg  = "puppetlabs-release-#{host['release']}.deb"
     base = "http://apt.puppetlabs.com"
     url  = "#{base}/#{pkg}"
-    return pkg, url
+    logger.warn "These are the return values for puppetlabs_repo_url: #{url} and #{pkg}"
+    return [ pkg, url ]
+  else
+    logger.warn "Could not find info for host family: #{host['family']}"
   end
 end
 
