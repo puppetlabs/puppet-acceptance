@@ -88,20 +88,20 @@ test_name "Revert VMs" do
     hosts.each do |host|
       vm_name = host['vmname'] || host.name
 
-      logger.notify "Reverting #{vm.name} to snapshot #{snap}"
+      logger.notify "Reverting #{vm_name} to snapshot #{snap}"
       start = Time.now
       on hypervisor, "sudo /sbin/zfs rollback -r #{vmpath}/#{vm_name}@#{snap}"
       snappaths.each do |spath|
-        logger.notify "Reverting #{vm.name}/#{spath} to snapshot #{snap}"
+        logger.notify "Reverting #{vm_name}/#{spath} to snapshot #{snap}"
         on hypervisor, "sudo /sbin/zfs rollback -r #{vmpath}/#{vm_name}/#{spath}@#{snap}"
       end
       time = Time.now - start
       logger.notify "Spent %.2f seconds reverting" % time
 
-      logger.notify "Booting #{vm.name}"
+      logger.notify "Booting #{vm_name}"
       start = Time.now
       on hypervisor, "sudo /sbin/zoneadm -z #{vm_name} boot"
-      logger.notify "Spent %.2f seconds booting #{vm.name}" % (Time.now - start)
+      logger.notify "Spent %.2f seconds booting #{vm_name}" % (Time.now - start)
     end
     hypervisor.close
 
