@@ -82,7 +82,7 @@ test_name "Revert VMs" do
     vmpath    = fog_file[:default][:solaris_hypervisor][hypername]['vmpath']
     snappaths = fog_file[:default][:solaris_hypervisor][hypername]['snappaths']
     
-    logger.notify "Connecting to hypervisor at #{hypername}" +
+    logger.notify "Connecting to hypervisor at #{hypername}"
     hypervisor = PuppetAcceptance::Host.create( hypername, options, config )
 
     hosts.each do |host|
