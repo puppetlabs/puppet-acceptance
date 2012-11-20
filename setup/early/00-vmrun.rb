@@ -6,6 +6,8 @@
 #   :solaris_hypervisor:
 #     mundilfari:
 #       vmpath: 'zpool/export/zones'
+#       snappaths:
+#         - 'rpool/ROOT/solaris'
 #
 # Example solaris config file:
 # HOSTS:
@@ -78,6 +80,7 @@ test_name "Revert VMs" do
 
     hypername = fog_file[:default][:solaris_hypervisor].keys.first
     vmpath    = fog_file[:default][:solaris_hypervisor][hypername]['vmpath']
+    snappaths = fog_file[:default][:solaris_hypervisor][hypername]['snappaths']
     
     logger.notify "Connecting to hypervisor at #{hypername}" +
     hypervisor = PuppetAcceptance::Host.create( hypername, options, config )
@@ -88,6 +91,10 @@ test_name "Revert VMs" do
       logger.notify "Reverting #{vm.name} to snapshot #{snap}"
       start = Time.now
       on hypervisor, "sudo /sbin/zfs rollback -r #{vmpath}/#{vm_name}@#{snap}"
+      snappaths.each do |spath|
+        logger.notify "Reverting #{vm.name}/#{spath} to snapshot #{snap}"
+        on hypervisor, "sudo /sbin/zfs rollback -r #{vmpath}/#{vm_name}/#{spath}@#{snap}"
+      end
       time = Time.now - start
       logger.notify "Spent %.2f seconds reverting" % time
 
