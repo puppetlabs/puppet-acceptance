@@ -81,8 +81,8 @@ test_name "Revert VMs" do
     hypervisor = PuppetAcceptance::Host.create( hypername, options, config )
     hosts.each do |host|
       vm_name = host['vmname'] || host.name
-      on hypervisor, "zfs rollback -r #{vmpath}/#{vm_name}@#{snap}"
-      on hypervisor, "zoneadm -z #{vm_name} boot"
+      on hypervisor, "sudo /sbin/zfs rollback -r #{vmpath}/#{vm_name}@#{snap}"
+      on hypervisor, "sudo /sbin/zoneadm -z #{vm_name} boot"
     end
     hypervisor.close
 
