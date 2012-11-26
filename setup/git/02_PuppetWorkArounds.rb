@@ -17,5 +17,9 @@ test_name 'work arounds for bugs' do
     step "REVISIT: Work around bug #5794 not creating reports as required" do
       on host, "mkdir -p /tmp/reports && chown puppet:puppet /tmp/reports"
     end
+
+    step "Ensure /var/lib exists" do
+      on host, "test -d /var/lib || mkdir -p /var/lib"
+    end
   end
 end
