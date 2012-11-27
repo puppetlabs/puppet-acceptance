@@ -5,6 +5,8 @@
 #   :vsphere_password: 'MySup3rS3cureP@$$w0rd'
 #   :solaris_hypervisor:
 #     mundilfari:
+#       user: 'harness'
+#       keys: '/home/harness/.ssh/id_rsa-harness'
 #       vmpath: 'zpool/export/zones'
 #       snappaths:
 #         - 'rpool/ROOT/solaris'
