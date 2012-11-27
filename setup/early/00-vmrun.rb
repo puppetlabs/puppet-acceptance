@@ -81,9 +81,24 @@ test_name "Revert VMs" do
     hypername = fog_file[:default][:solaris_hypervisor].keys.first
     vmpath    = fog_file[:default][:solaris_hypervisor][hypername]['vmpath']
     snappaths = fog_file[:default][:solaris_hypervisor][hypername]['snappaths']
-    
+
+    hyperconf = {
+      'HOSTS'  => {
+        hypername => { 'platform' => 'solaris-11-sparc' }
+      },
+      'CONFIG' => {
+        'user' => 'harness',
+        'ssh'  => { :keys => '/home/sschneider/id_rsa-harness' }
+      }
+    }
+
+    hyperconfig = PuppetAcceptance::TestConfig.new( hyperconf, options )
+
     logger.notify "Connecting to hypervisor at #{hypername}"
-    hypervisor = PuppetAcceptance::Host.create( hypername, options, config )
+    hypervisor = PuppetAcceptance::Host.create( hypername, options, hyperconfig )
+
+    # This is a hack
+    snap = 'foss' if snap == 'git'
 
     hosts.each do |host|
       vm_name = host['vmname'] || host.name
