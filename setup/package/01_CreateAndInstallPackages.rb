@@ -47,7 +47,10 @@ test_name 'Create Local Packages if Necessary' do
   config[:version] = versions
 
   step 'Install packaging dependencies' do
-    on hosts, 'apt-get install -y rake rsync'
+    hosts.each do |host|
+      on( hosts, 'apt-get install -y rake rsync' ) if host['family'] =~ /deb/i
+      on( hosts, 'yum install -y rubygem-rake rsync' ) if host['family'] =~ /^el/i
+    end
 
     packages_info.each do |pkg_info|
       on hosts, "cd #{SourcePath}/#{pkg_info[:name]}; rake package:bootstrap; rake pl:fetch"
@@ -67,10 +70,13 @@ test_name 'Create Local Packages if Necessary' do
         builder_host = stdout.chomp
       end
 
-      on host, "cat << 'INSECUREKEY' > $HOME/.ssh/id_rsa
+      if on( host, "cat << 'INSECUREKEY' > $HOME/.ssh/id_rsa
 #{get_insecure_builder_key}
-INSECUREKEY"
-      on host, 'chmod 600 $HOME/.ssh/id_rsa'
+INSECUREKEY", :silent => true ).exit_code == 0
+        logger.debug "Successfully added insecure builder key"
+      end
+
+      on host, 'chmod 600 $HOME/.ssh/id_rsa', :silent => true
 
       on host, "echo #{GitHubSig} >> $HOME/.ssh/known_hosts"
       on host, 'touch ~/.ssh/config'
@@ -80,11 +86,11 @@ Host #{builder_host}
   User insecure-builder
   StrictHostKeyChecking no
   UserKnownHostsFile=/dev/null
-SSHCONFIG"
+SSHCONFIG", :silent => true
 
       # This is the greatest thing EVER
-      on host, 'mv /etc/ssh/sshd_config /etc/ssh/sshd_config.backup'
-      on host, 'sed "s/StrictModes yes/StrictModes no/" /etc/ssh/sshd_config.backup >/etc/ssh/sshd_config'
+      on host, 'mv /etc/ssh/sshd_config /etc/ssh/sshd_config.backup', :silent => true
+      on host, 'sed "s/StrictModes yes/StrictModes no/" /etc/ssh/sshd_config.backup >/etc/ssh/sshd_config', :silent => true
     end
   end
 

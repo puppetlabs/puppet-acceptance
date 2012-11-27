@@ -9,8 +9,8 @@ module PuppetAcceptance
       GitHubSig   = 'github.com,207.97.227.239 ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ=='
 
       def get_insecure_builder_key
-        if File.exists( '~/.ssh/insecure_builder_key' )
-          return File.read( '~/.ssh/insecure_builder_key' )
+        if File.exists?( "#{ENV['HOME']}/.ssh/insecure_builder_key" )
+          return File.read( "#{ENV['HOME']}/.ssh/insecure_builder_key" )
         else
           raise 'Could not find builder key to install on SUT at ~/.ssh/insecure_builder_key'
         end
@@ -80,13 +80,24 @@ module PuppetAcceptance
           end
         end
 
-        pkg_path = "#{base_path}/#{pkg_info[:name]}/pkg/" +
-                   "#{host['family']}/#{host['release']}"
+        base_pkg_path = "#{base_path}/#{pkg_info[:name]}/pkg"
+        pkg_path = ''
+        if host['family'] =~ /deb/
+          pkg_path = base_pkg_path +
+                     '/' + host['family'] +
+                     '/' + host['release']
+        elsif host['family'] =~ /el/
+          pkg_path = base_pkg_path +
+                     '/' + host['family'] +
+                     '/' + host['release'].split('-')[0] +
+                     '/products/' + host['arch']
+        end
+
         pkg_cmd  = case host['family']
                    when /deb/i
                      'dpkg -i'
                    when /el/i
-                     'yum localinstall'
+                     'yum localinstall -y'
                    else
                      raise ArgumentError,
                        "I don't know how to install that package"
@@ -98,8 +109,9 @@ module PuppetAcceptance
         end
 
         pkgs = []
+        delim = host['family'] =~ /deb/ ? '_' : '-'
         pkg_names.each do |pkg|
-          on host, "cd #{pkg_path}; ls | grep ^#{pkg}_#{version}.*#{pkg_ext}$" do
+          on host, "cd #{pkg_path}; ls | grep ^#{pkg}#{delim}#{version}.*#{pkg_ext}$" do
             pkgs << stdout.chomp
           end
         end
@@ -123,10 +135,10 @@ module PuppetAcceptance
         package_cmd = case host['family']
                       when /deb/i
                         "export COW=base-#{host['release']}-i386.cow; " +
-                        'rake pl:remote_deb_rc'
+                        'rake pl:remote_deb_rc_build'
                       when /el/i
                         "export MOCK=pl-#{host['release'].split('-')[0]}-i386; " +
-                        'rake pl:remote_mock_rc'
+                        'rake pl:remote_mock_final'
                       else
                         raise ArgumentError,
                           "I don't know how to create that package"

@@ -28,7 +28,7 @@ module PuppetAcceptance
       return case a_name_that_confuses_os_and_family
              when /debian|ubuntu/
                'deb'
-             when /el-\d/
+             when /^el/
                'el'
              when /s(les|use)-/
                'suse'

@@ -13,16 +13,28 @@ debug_opt = options[:debug] ? 'vh' : ''
 def puppetlabs_repo_url host
   if host['family'] =~ /el/i
     pkg  = "puppetlabs-release-#{host['release']}.noarch.rpm"
+    logger.debug ''
+    logger.debug pkg.inspect
+    logger.debug ''
     base = "http://yum.puppetlabs.com/el"
+    logger.debug ''
+    logger.debug base.inspect
+    logger.debug ''
     blah = "#{host['version']}/products/#{host['arch']}"
+    logger.debug ''
+    logger.debug blah.inspect
+    logger.debug ''
     url  = "#{base}/#{blah}/#{pkg}"
-    logger.warn "These are the return values for puppetlabs_repo_url: #{url} and #{pkg}"
+    logger.debug ''
+    logger.debug url.inspect
+    logger.debug ''
+    logger.debug "These are the return values for puppetlabs_repo_url: #{url} and #{pkg}"
     return [ pkg, url ]
   elsif host['family'] =~ /deb/i
     pkg  = "puppetlabs-release-#{host['release']}.deb"
     base = "http://apt.puppetlabs.com"
     url  = "#{base}/#{pkg}"
-    logger.warn "These are the return values for puppetlabs_repo_url: #{url} and #{pkg}"
+    logger.debug "These are the return values for puppetlabs_repo_url: #{url} and #{pkg}"
     return [ pkg, url ]
   else
     logger.warn "Could not find info for host family: #{host['family']}"
@@ -88,10 +100,15 @@ hosts.each do |host|
 
     if on( host,
            'rpm -qa | grep puppetlabs-release',
-           :acceptance_exit_codes => [0,1] ).exit_code == 1
+           :acceptable_exit_codes => [0,1] ).exit_code == 1
 
       metadata_modified = true
-      url, pkg = puppetlabs_repo_info( host )
+      pkg, url = puppetlabs_repo_url( host )
+      logger.debug ''
+      logger.debug pkg.inspect
+      logger.debug ''
+      logger.debug url.inspect
+      logger.debug ''
       on host, "rpm -i#{debug_opt} #{url}"
     end
 
