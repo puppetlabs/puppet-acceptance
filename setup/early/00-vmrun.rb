@@ -87,8 +87,8 @@ test_name "Revert VMs" do
         hypername => { 'platform' => 'solaris-11-sparc' }
       },
       'CONFIG' => {
-        'user' => 'harness',
-        'ssh'  => { :keys => '/home/sschneider/id_rsa-harness' }
+        'user' => fog_file[:default][:solaris_hypervisor][hypername]['user'] || 'harness',
+        'ssh'  => { :keys => fog_file[:default][:solaris_hypervisor][hypername]['keys'] || "#{ENV['HOME']}/.ssh/id_rsa" }
       }
     }
 
