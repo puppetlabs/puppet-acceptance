@@ -1,4 +1,31 @@
-test_name "Revert VMs"
+# Example ~/.fog file:
+# :default:
+#   :vsphere_server: 'qa-vsphere.puppetlabs.lan'
+#   :vsphere_username: 'justin'
+#   :vsphere_password: 'MySup3rS3cureP@$$w0rd'
+#   :solaris_hypervisor:
+#     mundilfari:
+#       user: 'harness'
+#       keys: '/home/harness/.ssh/id_rsa-harness'
+#       vmpath: 'zpool/export/zones'
+#       snappaths:
+#         - 'rpool/ROOT/solaris'
+#
+# Example solaris config file:
+# HOSTS:
+#   solaris-11-agent:
+#     roles:
+#       - agent
+#     platform: solaris-11-sparc
+#   solaris-11-master:
+#     roles:
+#       - agent
+#       - master
+#       - database
+#     platform: solaris-11-sparc
+#
+
+test_name "Revert VMs" do
 
   # NOTE: this code is shamelessly stolen from facter's 'domain' fact, but
   # we don't have access to facter at this point in the run.  Also, this
@@ -45,7 +72,57 @@ test_name "Revert VMs"
   snap = 'git' if snap == 'manual'  # Sweet, sweet consistency
   fail_test "You must specifiy a snapshot when using pe_noop" if snap == 'pe_noop'
 
-  if options[:vmrun] == 'vsphere'
+  if options[:vmrun] == 'solaris'
+    # support Fog/Cloud Provisioner layout for Solaris
+    fog_file = nil
+    if File.exists?( File.join(ENV['HOME'], '.fog') )
+      fog_file = YAML.load_file( File.join(ENV['HOME'], '.fog') )
+    end
+    fail_test "Cant load ~/.fog config" unless fog_file
+
+    hypername = fog_file[:default][:solaris_hypervisor].keys.first
+    vmpath    = fog_file[:default][:solaris_hypervisor][hypername]['vmpath']
+    snappaths = fog_file[:default][:solaris_hypervisor][hypername]['snappaths']
+
+    hyperconf = {
+      'HOSTS'  => {
+        hypername => { 'platform' => 'solaris-11-sparc' }
+      },
+      'CONFIG' => {
+        'user' => fog_file[:default][:solaris_hypervisor][hypername]['user'] || 'harness',
+        'ssh'  => { :keys => fog_file[:default][:solaris_hypervisor][hypername]['keys'] || "#{ENV['HOME']}/.ssh/id_rsa" }
+      }
+    }
+
+    hyperconfig = PuppetAcceptance::TestConfig.new( hyperconf, options )
+
+    logger.notify "Connecting to hypervisor at #{hypername}"
+    hypervisor = PuppetAcceptance::Host.create( hypername, options, hyperconfig )
+
+    # This is a hack
+    snap = 'foss' if snap == 'git'
+
+    hosts.each do |host|
+      vm_name = host['vmname'] || host.name
+
+      logger.notify "Reverting #{vm_name} to snapshot #{snap}"
+      start = Time.now
+      on hypervisor, "sudo /sbin/zfs rollback -r #{vmpath}/#{vm_name}@#{snap}"
+      snappaths.each do |spath|
+        logger.notify "Reverting #{vm_name}/#{spath} to snapshot #{snap}"
+        on hypervisor, "sudo /sbin/zfs rollback -r #{vmpath}/#{vm_name}/#{spath}@#{snap}"
+      end
+      time = Time.now - start
+      logger.notify "Spent %.2f seconds reverting" % time
+
+      logger.notify "Booting #{vm_name}"
+      start = Time.now
+      on hypervisor, "sudo /sbin/zoneadm -z #{vm_name} boot"
+      logger.notify "Spent %.2f seconds booting #{vm_name}" % (Time.now - start)
+    end
+    hypervisor.close
+
+  elsif options[:vmrun] == 'vsphere'
     require 'yaml' unless defined?(YAML)
     require File.expand_path(File.join(File.dirname(__FILE__),
                                        '..', '..','lib', 'puppet_acceptance',
@@ -209,3 +286,4 @@ test_name "Revert VMs"
   else
     skip_test "Skipping revert VM step"
   end
+end
