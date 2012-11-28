@@ -97,7 +97,7 @@ module PuppetAcceptance
                    when /deb/i
                      'dpkg -i'
                    when /el/i
-                     'yum localinstall -y'
+                     'yum localinstall --nogpgcheck -y'
                    else
                      raise ArgumentError,
                        "I don't know how to install that package"

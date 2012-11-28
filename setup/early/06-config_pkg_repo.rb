@@ -13,21 +13,9 @@ debug_opt = options[:debug] ? 'vh' : ''
 def puppetlabs_repo_url host
   if host['family'] =~ /el/i
     pkg  = "puppetlabs-release-#{host['release']}.noarch.rpm"
-    logger.debug ''
-    logger.debug pkg.inspect
-    logger.debug ''
     base = "http://yum.puppetlabs.com/el"
-    logger.debug ''
-    logger.debug base.inspect
-    logger.debug ''
     blah = "#{host['version']}/products/#{host['arch']}"
-    logger.debug ''
-    logger.debug blah.inspect
-    logger.debug ''
     url  = "#{base}/#{blah}/#{pkg}"
-    logger.debug ''
-    logger.debug url.inspect
-    logger.debug ''
     logger.debug "These are the return values for puppetlabs_repo_url: #{url} and #{pkg}"
     return [ pkg, url ]
   elsif host['family'] =~ /deb/i
@@ -104,11 +92,6 @@ hosts.each do |host|
 
       metadata_modified = true
       pkg, url = puppetlabs_repo_url( host )
-      logger.debug ''
-      logger.debug pkg.inspect
-      logger.debug ''
-      logger.debug url.inspect
-      logger.debug ''
       on host, "rpm -i#{debug_opt} #{url}"
     end
 

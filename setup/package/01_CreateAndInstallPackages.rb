@@ -49,7 +49,7 @@ test_name 'Create Local Packages if Necessary' do
   step 'Install packaging dependencies' do
     hosts.each do |host|
       on( hosts, 'apt-get install -y rake rsync' ) if host['family'] =~ /deb/i
-      on( hosts, 'yum install -y rubygem-rake rsync' ) if host['family'] =~ /^el/i
+      on( hosts, 'yum install -y rubygems rubygem-rake rsync' ) if host['family'] =~ /^el/i
     end
 
     packages_info.each do |pkg_info|
