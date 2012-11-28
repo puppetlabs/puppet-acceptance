@@ -86,14 +86,10 @@ hosts.each do |host|
       on host, "rpm -i#{debug_opt} #{url}"
     end
 
-    if on( host,
-           'rpm -qa | grep puppetlabs-release',
-           :acceptable_exit_codes => [0,1] ).exit_code == 1
-
-      metadata_modified = true
-      pkg, url = puppetlabs_repo_url( host )
-      on host, "rpm -i#{debug_opt} #{url}"
-    end
+    pkg, url = puppetlabs_repo_url( host )
+    pl_repo_installed = on( host, "rpm -i#{debug_opt} #{url}",
+                            :acceptable_exit_codes => [0,1] )
+    metadata_modified = true if pl_repo_installed.exit_code == 0
 
     on( host, 'yum clean metadata' ) if metadata_modified
 
