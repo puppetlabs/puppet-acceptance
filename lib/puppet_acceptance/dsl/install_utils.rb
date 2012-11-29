@@ -12,7 +12,7 @@ module PuppetAcceptance
         if File.exists?( "#{ENV['HOME']}/.ssh/insecure_builder_key" )
           return File.read( "#{ENV['HOME']}/.ssh/insecure_builder_key" )
         else
-          raise 'Could not find builder key to install on SUT at ~/.ssh/insecure_builder_key'
+          raise "Could not find builder key to install on SUT at #{ENV['HOME']}/.ssh/insecure_builder_key"
         end
       end
 
