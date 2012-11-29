@@ -1,8 +1,8 @@
 test_name 'Sign Requested Agent Certs' do
-  on master, puppet("cert --sign --all"), :acceptable_exit_codes => [0,24]
 
   agents.each do |agent|
-    next unless agent['roles'].length == 1 and agent['roles'].include?('agent')
+
+    on agent, puppet( 'agent -t' ), :acceptable_exit_codes => [0,1]
 
     (0..10).each do |i|
       step "Checking if cert issued for #{agent} (#{i})"
