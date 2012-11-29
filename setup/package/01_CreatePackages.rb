@@ -1,19 +1,9 @@
 require 'lib/puppet_acceptance/dsl/install_utils'
-# ^^ Do I really need to do this?
 
 test_name 'Create Local Packages if Necessary' do
   extend PuppetAcceptance::DSL::InstallUtils
-  # ^^ We have to 'extend' because we are technically already in an instance
-  # of TestCase, not in a class definition (`include` is a private method)
 
   tmp_uris      = []
-  packages_info = []
-
-  # Its important to remember that the Hash returned from
-  # #extract_repo_info_from() is of the format:
-  #  :name => 'repository name, often doubling as project name'
-  #  :path => 'uri to repository'
-  #  :rev  => 'git revision to checkout'
   step 'Extract information from repos URI' do
     options[:install].each do |uri|
       step "Extracting info for #{uri}" do
@@ -23,12 +13,14 @@ test_name 'Create Local Packages if Necessary' do
     end
   end
 
+  packages_info = []
   step 'Order packages' do
-    packages_info = order_packages( tmp_uris )
+    packages_info = order_packages( tmp_uris ).uniq
   end
+  hosts.each {|h| h[:installation_pkgs] = packages_info }
 
   versions = {}
-  step 'Clone git repositories' do
+  step 'Clone git repositories and Set version info' do
     prepare_repo_dirs! hosts
     hosts.each_with_index do |host, index|
 
@@ -43,26 +35,35 @@ test_name 'Create Local Packages if Necessary' do
       end
     end
   end
-
   config[:version] = versions
 
   step 'Install packaging dependencies' do
     hosts.each do |host|
-      on( hosts, 'apt-get install -y rake rsync' ) if host['family'] =~ /deb/i
-      on( hosts, 'yum install -y rubygems rubygem-rake rsync' ) if host['family'] =~ /^el/i
+      if host['family'] =~ /deb/i
+        on( hosts, 'apt-get install -y rake rsync' )
+      elsif host['family'] =~ /^el/i
+        on( hosts, 'yum install -y rubygems rubygem-rake rsync' )
+      end
     end
 
     packages_info.each do |pkg_info|
-      on hosts, "cd #{SourcePath}/#{pkg_info[:name]}; rake package:bootstrap; rake pl:fetch"
+      on hosts, "cd #{SourcePath}/#{pkg_info[:name]}; " +
+                'rake package:bootstrap; rake pl:fetch'
     end
   end
 
   step 'Setup SSH for cloning and bulding' do
     hosts.each do |host|
       if host['family'] =~ /deb/i
-        yml_cmd = %q<ruby -e "require 'yaml'; defaults = YAML.load_file( \"#{ENV['HOME']}/.packaging/builder_data.yaml\" ); puts defaults['deb_build_host']" >
+        yml_cmd = %q<ruby -e "require 'yaml'; > +
+                  %q<  defaults = YAML.load_file(> +
+                  %q<    \"#{ENV['HOME']}/.packaging/builder_data.yaml\" > +
+                  %q<  ); puts defaults['deb_build_host']" >
       elsif host['family'] =~ /el/i
-        yml_cmd = %q<ruby -e "require 'yaml'; defaults = YAML.load_file( \"#{ENV['HOME']}/.packaging/builder_data.yaml\" ); puts defaults['rpm_build_host']" >
+        yml_cmd = %q<ruby -e "require 'yaml'; > +
+                  %q<  defaults = YAML.load_file(> +
+                  %q<    \"#{ENV['HOME']}/.packaging/builder_data.yaml\" > +
+                  %q<  ); puts defaults['rpm_build_host']" >
       end
 
       builder_host = ''
@@ -89,8 +90,13 @@ Host #{builder_host}
 SSHCONFIG", :silent => true
 
       # This is the greatest thing EVER
-      on host, 'mv /etc/ssh/sshd_config /etc/ssh/sshd_config.backup', :silent => true
-      on host, 'sed "s/StrictModes yes/StrictModes no/" /etc/ssh/sshd_config.backup >/etc/ssh/sshd_config', :silent => true
+      on host,
+        'mv /etc/ssh/sshd_config /etc/ssh/sshd_config.backup',
+        :silent => true
+      on host,
+        'sed "s/StrictModes yes/StrictModes no/" ' +
+        '/etc/ssh/sshd_config.backup >/etc/ssh/sshd_config',
+        :silent => true
     end
   end
 
@@ -103,21 +109,6 @@ SSHCONFIG", :silent => true
           create_package_for host, "#{SourcePath}/#{pkg_info[:name]}"
         end
       end
-    end
-  end
-
-  step 'Install local packages' do
-    install_packages_for_hosts hosts,
-                               SourcePath,
-                               packages_info
-  end
-
-  step "Agents: create basic puppet.conf" do
-    agents.each do |agent|
-      puppetconf = File.join(agent['puppetpath'], 'puppet.conf')
-
-      on agent, "echo '[agent]' > #{puppetconf} && " +
-                "echo server=#{master} >> #{puppetconf}"
     end
   end
 end
