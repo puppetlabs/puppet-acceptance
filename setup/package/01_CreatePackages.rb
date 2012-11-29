@@ -89,6 +89,8 @@ Host #{builder_host}
   UserKnownHostsFile=/dev/null
 SSHCONFIG", :silent => true
 
+      on host, 'chmod 600 $HOME/.ssh/config'
+
       # This is the greatest thing EVER
       on host,
         'mv /etc/ssh/sshd_config /etc/ssh/sshd_config.backup',
