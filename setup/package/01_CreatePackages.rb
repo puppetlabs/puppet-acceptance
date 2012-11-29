@@ -78,6 +78,7 @@ INSECUREKEY", :silent => true ).exit_code == 0
       end
 
       on host, 'chmod 600 $HOME/.ssh/id_rsa', :silent => true
+      on host, 'rm $HOME/.ssh/id_rsa.pub || true', :silet => true
 
       on host, "echo #{GitHubSig} >> $HOME/.ssh/known_hosts"
       on host, 'touch ~/.ssh/config'
