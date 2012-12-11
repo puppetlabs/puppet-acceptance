@@ -192,6 +192,20 @@ you must check out the tests first, then the harness, as such:
 ### Run the tests
     ./systest.rb --vmrun fusion -c ci/ci-${platform}.cfg --type git -p origin/2.7rc -f 1.5.8 -t acceptance-tests/tests --no-color --xml --debug
 
+#### Using Native Packages
+The above instructions will run your puppet test suite from source on
+the target VM. If you're using a Debian or Enterprise Linux based distro you
+may try our experimental support for building native system packges from
+source and running against them. The harness will use Puppetlabs'
+[Packaging Repo](https://github.com/puppetlabs/packaging) to remotely build
+your packages. Currently you may use Debian based building on demand but
+Enterprise Linux packages must be scheduled with Delivery. You must be on
+Puppetlabs' VPN while we work out the rough spots internally. Simply replace
+`--type git` with `--type package` above.
+
+i.e.:
+
+    ./systest.rb --vmrun fusion -c ci/ci-${platform}.cfg --type package -p origin/2.7rc -f 1.5.8 -t acceptance-tests/tests --no-color --xml --debug
 
 ## Running PE tests ##
 
@@ -200,7 +214,7 @@ indicates the version string of the most recent tarball.
 
     $ [topo@gigio ]$ cat /opt/enterprise/dists/LATEST 
     2.5.3
-    
+
     $ [topo@gigio ]$ ls -1 /opt/enterprise/dists
     LATEST
     puppet-enterprise-2.5.3-debian-6-amd64.tar.gz
@@ -223,5 +237,6 @@ indicates the version string of the most recent tarball.
     If you are testing on FOSS, the test for each branch can be found in the puppet repo under acceptance/tests
 
 Special topic branch checkout with a targeted test:
-    ./systest.rb -c your_cfg --type git -p https://github.com/SomeDude/puppet/tree/ticket/2.6.next/6856-dangling-symlinks -f 1.5.8 / 
+
+    ./systest.rb -c your_cfg --type git -p https://github.com/SomeDude/puppet/tree/ticket/2.6.next/6856-dangling-symlinks -f 1.5.8 /
      -t tests/acceptance/ticket_6856_manage_not_work_with_symlinks.rb

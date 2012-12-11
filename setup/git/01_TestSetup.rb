@@ -19,14 +19,14 @@ test_name "Install packages and repositories on target machines..." do
   hosts.each_with_index do |host, index|
     on host, "echo #{GitHubSig} >> $HOME/.ssh/known_hosts"
 
-    repositories.each do |repository|
-      step "Install #{repository[:name]}"
-      install_from_git host, SourcePath, repository
+    clone_git_repos host, SourcePath, repositories
+    install_from_git_repos host, SourcePath, repositories.map {|r| r[:name] }
 
-      if index == 1
-        versions[repository[:name]] = find_git_repo_versions(host,
-                                                             SourcePath,
-                                                             repository)
+    if index == 1
+      repositories.each do |repo|
+        versions[repo[:name]] = find_git_repo_versions(host,
+                                                       SourcePath,
+                                                       repo)
       end
     end
   end

@@ -7,29 +7,36 @@ module PuppetAcceptance
     def self.create name, options, config
       case config['HOSTS'][name]['platform']
       when /windows/
-        Windows::Host.new name, options, config
+        Windows::Host.new( name,
+                           config['CONFIG'],
+                           config['HOSTS'][name],
+                           options[:logger],
+                           config.is_pe? )
       else
-        Unix::Host.new name, options, config
+        Unix::Host.new( name,
+                        config['CONFIG'],
+                        config['HOSTS'][name],
+                        options[:logger],
+                        config.is_pe? )
       end
     end
 
     attr_accessor :logger
     attr_reader :name, :defaults
-    def initialize name, options, config
-      @logger = options[:logger]
-      @name, @options, @config = name, options.dup, config
 
-      # This is annoying and its because of drift/lack of enforcement/lack of having
-      # a explict relationship between our defaults, our setup steps and how they're
-      # related through 'type' and the differences between the assumption of our two
-      # configurations we have for many of our products
-      type = is_pe? ? :pe : :foss
-      @defaults = merge_defaults_for_type @config, type
-    end
-
-    def merge_defaults_for_type config, type
-      defaults = self.class.send "#{type}_defaults".to_sym
-      defaults.merge(config['CONFIG']).merge(config['HOSTS'][name])
+    def get_family a_name_that_confuses_os_and_family
+      return case a_name_that_confuses_os_and_family
+             when /debian|ubuntu/
+               'deb'
+             when /^el/
+               'el'
+             when /s(les|use)-/
+               'suse'
+             when /solaris/
+               'solaris'
+             when /windows/
+               'windows'
+             end
     end
 
     def node_name
@@ -61,7 +68,7 @@ module PuppetAcceptance
     end
 
     def is_pe?
-      @config.is_pe?
+      @is_pe
     end
 
     def connection

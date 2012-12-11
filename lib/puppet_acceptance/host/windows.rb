@@ -13,29 +13,43 @@ module Windows
     include Windows::File
     include Windows::Exec
 
-    def self.pe_defaults
-      {
-        'user'          => 'Administrator',
-        'group'         => 'Administrators',
-        'puppetpath'    => '`cygpath -smF 35`/PuppetLabs/puppet/etc',
-        'puppetvardir'  => '`cygpath -smF 35`/PuppetLabs/puppet/var',
-        'puppetbindir'  => '`cygpath -F 38`/Puppet Labs/Puppet Enterprise/bin',
-        'pathseparator' => ';',
-      }
+    PE_DEFAULTS = {
+      'user'          => 'Administrator',
+      'group'         => 'Administrators',
+      'puppetpath'    => '`cygpath -smF 35`/PuppetLabs/puppet/etc',
+      'puppetvardir'  => '`cygpath -smF 35`/PuppetLabs/puppet/var',
+      'puppetbindir'  => '`cygpath -F 38`/Puppet Labs/Puppet Enterprise/bin',
+      'pathseparator' => ';',
+    }
+
+    FOSS_DEFAULTS = {
+      'user'              => 'Administrator',
+      'group'             => 'Administrators',
+      'puppetpath'        => '`cygpath -smF 35`/PuppetLabs/puppet/etc',
+      'puppetvardir'      => '`cygpath -smF 35`/PuppetLabs/puppet/var',
+      'hieralibdir'       => '`cygpath -w /opt/puppet-git-repos/hiera/lib`',
+      'hierapuppetlibdir' => '`cygpath -w /opt/puppet-git-repos/hiera-puppet/lib`',
+      # PATH related variables need to be Unix, which cygwin converts
+      'hierabindir'       => '/opt/puppet-git-repos/hiera/bin',
+      'pathseparator'     => ';',
+    }
+
+    def initialize name, config_overrides, host_overrides, logger, is_pe
+      confused_name, version, arch = host_overrides['platform'].split('-')
+      @is_pe    = is_pe
+      @name     = name
+      @logger   = logger
+      defaults  = is_pe? ? PE_DEFAULTS : FOSS_DEFAULTS
+      defaults['version'] = version
+      defaults['arch']    = arch
+      defaults['family']  = get_family( confused_name )
+      defaults['release'] = get_release( confused_name, version )
+
+      @defaults = defaults.merge(config_overrides).merge(host_overrides)
     end
 
-    def self.foss_defaults
-      {
-        'user'              => 'Administrator',
-        'group'             => 'Administrators',
-        'puppetpath'        => '`cygpath -smF 35`/PuppetLabs/puppet/etc',
-        'puppetvardir'      => '`cygpath -smF 35`/PuppetLabs/puppet/var',
-        'hieralibdir'       => '`cygpath -w /opt/puppet-git-repos/hiera/lib`',
-        'hierapuppetlibdir' => '`cygpath -w /opt/puppet-git-repos/hiera-puppet/lib`',
-        # PATH related variables need to be Unix, which cygwin converts
-        'hierabindir'       => '/opt/puppet-git-repos/hiera/bin',
-        'pathseparator'     => ';',
-      }
+    def get_release maybe_an_os, version
+      return version
     end
   end
 end

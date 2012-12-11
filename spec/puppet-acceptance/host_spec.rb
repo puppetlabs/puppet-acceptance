@@ -9,6 +9,7 @@ module PuppetAcceptance
     let(:options) { @options || Hash.new                  }
     let(:host)    { Host.create 'name', options, config   }
 
+    before { @platform = 'debian-6-amd64' }
     it 'creates a windows host given a windows config' do
       @platform = 'windows'
       expect( host ).to be_a_kind_of Windows::Host
@@ -75,7 +76,7 @@ module PuppetAcceptance
 
       it 'correctly merges network configs over defaults?' do
         overridden_config = MockConfig.new( {'puppetpath'=> '/i/do/what/i/want'},
-                                            {'name' => {} },
+                                            {'name' => {'platform' => @platform} },
                                               false )
         merged_host = Host.create 'name', options, overridden_config
         expect( merged_host['puppetpath'] ).to be === '/i/do/what/i/want'
@@ -84,7 +85,8 @@ module PuppetAcceptance
       it 'correctly merges host specifics over defaults' do
         overriding_config = MockConfig.new( {},
                                             {'name' => {
-                                              'puppetpath' => '/utter/awesomeness'}
+                                              'puppetpath' => '/utter/awesomeness',
+                                              'platform'   => @platform}
                                             }, true )
 
         merged_host = Host.create 'name', options, overriding_config
