@@ -138,46 +138,72 @@ module PuppetAcceptance
     #
     # Parameters:
     # [host] the master host
-    # [arg] a string containing all of the command line arguments that you would like for the puppet master to
-    #     be started with.  Defaults to '--daemonize'.  NOTE: the following values will be added to the argument list
+    # [arg] a string containing all of the command line arguments that you
+    # would like for the puppet master to be started with.  Defaults to
+    #   '--daemonize'.
+    # NOTE: the following values will be added to the argument list
     #     if they are not explicitly set in your 'args' parameter:
     # * --daemonize
     # * --logdest="#{host['puppetvardir']}/log/puppetmaster.log"
     # * --dns_alt_names="puppet, $(facter hostname), $(puppet fqdn)"
-    def with_master_running_on(host, args='--daemonize', options={}, &block)
-      # they probably want to run with daemonize.  If they pass some other arg/args but forget to re-include
-      # daemonize, we'll check and make sure they didn't explicitly specify "no-daemonize", and, failing that,
-      # we'll add daemonize to the args string
-      if (args !~ /(?:--daemonize)|(?:--no-daemonize)/) then args << " --daemonize" end
+    def with_master_running_on( master_host, given_master_opts, adtl_opts = {}, &block )
+      if given_master_opts.is_a?( String )
+        opts_string = add_string_defaults( master_host, given_master_opts, adtl_opts )
+      end
 
-      if (args !~ /--logdest/) then args << " --logdest=\"#{master['puppetvardir']}/log/puppetmaster.log\"" end
-      if (args !~ /--dns_alt_names/) then args << " --dns_alt_names=\"puppet, $(facter hostname), $(facter fqdn)\"" end
-
-      on hosts, host_command('rm -rf #{host["puppetpath"]}/ssl') unless options[:preserve_ssl]
+      # Because we tots passed this into the method
       agents.each do |agent|
         if vardir = agent['puppetvardir']
           # we want to remove everything except the log and ssl directory (we
           # just got rid of ssl if preserve_ssl wasn't set, and otherwise want
           # to leave it)
-          on agent, %Q[for i in "#{vardir}/*"; do echo $i; done | grep -v log| grep -v ssl | xargs rm -rf]
+          on agent, %Q[for i in "#{vardir}/*"; do echo $i; done | ] +
+                    %Q[grep -v log| grep -v ssl | xargs rm -rf]
         end
       end
 
-      on host, puppet_master('--configprint pidfile')
+      on host, puppet_master( '--configprint pidfile' )
 
+      # Yeah, stdout exists here, of course it does....
       pidfile = stdout.chomp
 
-      start_puppet_master(host, args, pidfile)
+      start_puppet_master( host, opts_string, pidfile )
 
       yield if block
     ensure
-      stop_puppet_master(host, pidfile)
+      stop_puppet_master( host, pidfile )
     end
 
-    def start_puppet_master(host, args, pidfile)
-      on host, puppet_master(args)
-      on(host, "kill -0 $(cat #{pidfile})", :acceptable_exit_codes => [0,1])
+    def add_string_defaults( master_host, given_master_opts, additional_opts )
+      # they probably want to run with daemonize.  If they pass some other
+      # arg/args but forget to re-include daemonize, we'll check and make
+      # sure they didn't explicitly specify "no-daemonize", and, failing that,
+      # we'll add daemonize to the args string
+      if (given_master_opts !~ /(?:--daemonize)|(?:--no-daemonize)/)
+        given_master_opts << " --daemonize"
+      end
 
+      if (given_master_opts !~ /--logdest/) then
+        given_master_opts << " --logdest=\"#{master['puppetvardir']}/log/puppetmaster.log\""
+      end
+
+      if (given_master_opts !~ /--dns_alt_names/) then
+        given_master_opts << " --dns_alt_names=\"puppet, $(facter hostname), $(facter fqdn)\""
+      end
+
+      unless additional_opts[:preserve_ssl]
+        # Sweet hayzesus, let's just pull all the hosts from nowhere
+        on hosts, host_command('rm -rf #{host["puppetpath"]}/ssl')
+      end
+
+      given_master_opts
+    end
+
+    def start_puppet_master( host, args, pidfile )
+      on host, puppet_master( args )
+      on( host, "kill -0 $(cat #{pidfile})", :acceptable_exit_codes => [0,1] )
+
+      # We're just using TestCase#exit_code here, nothing to see, move along
       raise "Puppet master doesn't appear to be running at all" unless exit_code == 0
 
       timeout = 15
@@ -189,7 +215,12 @@ module PuppetAcceptance
         Timeout.timeout(timeout) do
           loop do
             # 7 is "Could not connect to host", which will happen before it's running
-            result = on(host, "curl -s -k https://#{host}:8140", :acceptable_exit_codes => [0,7])
+            # the result is set to the output of this because....
+            result = on(host,
+                        "curl -s -k https://#{host}:8140",
+                        :acceptable_exit_codes => [0,7])
+            # we then use TestCase#exit_code here,
+            # which is a helper for TestCase#result.exit_code
             break if exit_code == 0
             sleep 1
           end
@@ -219,7 +250,10 @@ module PuppetAcceptance
       begin
         Timeout.timeout(timeout) do
           loop do
-            on(host, "kill -0 $(cat #{pidfile})", :acceptable_exit_codes => [0,1])
+            on(host,
+               "kill -0 $(cat #{pidfile})",
+               :acceptable_exit_codes => [0,1])
+
             break if exit_code == 1
             sleep 1
           end
