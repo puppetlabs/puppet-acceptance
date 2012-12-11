@@ -80,7 +80,13 @@ module PuppetAcceptance
           end
         end
 
-        base_pkg_path = "#{base_path}/#{pkg_info[:name]}/pkg"
+        rc = false
+        base_proj_path = "#{base_path}/#{pkg_info[:name]}"
+        on host, "cd #{base_proj_path}; git describe" do
+          rc = true if stdout =~ /rc/
+        end
+
+        base_pkg_path = "#{base_proj_path}/pkg"
         pkg_path = ''
         if host['family'] =~ /deb/
           pkg_path = base_pkg_path +
@@ -90,7 +96,7 @@ module PuppetAcceptance
           pkg_path = base_pkg_path +
                      '/' + host['family'] +
                      '/' + host['release'].split('-')[0] +
-                     '/products/' + host['arch']
+                     "/#{rc ? 'devel' : 'products'}/" + host['arch']
         end
 
         pkg_cmd  = case host['family']
@@ -132,13 +138,19 @@ module PuppetAcceptance
       end
 
       def create_package_for host, path_to_repository
+        rc = false
+        on host, "cd #{path_to_repository}; git describe" do
+          rc = true if stdout =~ /rc/
+        end
+
         package_cmd = case host['family']
                       when /deb/i
                         "export COW=base-#{host['release']}-i386.cow; " +
-                        'rake pl:remote_deb_rc_build'
+                        "rake pl:remote_deb_#{rc ? 'rc' : 'final' }_build"
                       when /el/i
-                        "export MOCK=pl-#{host['release'].split('-')[0]}-i386; " +
-                        'rake pl:remote_mock_final'
+                        cmd = rc ? 'pl:remote_rpm_rc_build' : 'pl:remote_mock_final'
+                        "export MOCK=pl-#{host['release'].split('-')[0]}-i386#{ rc ? '-dev' : ''}; " +
+                        "rake #{cmd}"
                       else
                         raise ArgumentError,
                           "I don't know how to create that package"
