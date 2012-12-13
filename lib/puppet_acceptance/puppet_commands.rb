@@ -162,16 +162,16 @@ module PuppetAcceptance
         end
       end
 
-      on host, puppet_master( '--configprint pidfile' )
+      on master_host, puppet_master( '--configprint pidfile' )
 
       # Yeah, stdout exists here, of course it does....
       pidfile = stdout.chomp
 
-      start_puppet_master( host, opts_string, pidfile )
+      start_puppet_master( master_host, opts_string, pidfile )
 
       yield if block
     ensure
-      stop_puppet_master( host, pidfile )
+      stop_puppet_master( master_host, pidfile )
     end
 
     def add_string_defaults( master_host, given_master_opts, additional_opts )
