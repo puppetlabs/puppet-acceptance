@@ -23,23 +23,24 @@ module PuppetAcceptance
     end
 
     def execute!
+      suites = []
       begin
         trap(:INT) do
           @logger.warn "Interrupt received; exiting..."
           exit(1)
         end
 
-        run_suite('pre-setup', pre_options, :fail_fast) if @options[:pre_script]
-        run_suite('setup', setup_options, :fail_fast)
-        run_suite('pre-suite', pre_suite_options)
+        suites << run_suite('pre-setup', pre_options, suites, :fail_fast) if @options[:pre_script]
+        suites << run_suite('setup', setup_options, suites, :fail_fast)
+        suites << run_suite('pre-suite', pre_suite_options, suites)
         begin
-          run_suite('acceptance', @options) unless @options[:installonly]
+          suites << run_suite('acceptance', @options, suites) unless @options[:installonly]
         ensure
-          run_suite('post-suite', post_suite_options)
+          suites << run_suite('post-suite', post_suite_options, suites)
         end
 
       ensure
-        run_suite('cleanup', cleanup_options)
+        run_suite('cleanup', cleanup_options, suites)
         @hosts.each {|host| host.close }
       end
     end
@@ -49,9 +50,11 @@ module PuppetAcceptance
         @logger.notify("No tests to run for suite '#{name}'")
         return
       end
-      PuppetAcceptance::TestSuite.new(
+      suite = PuppetAcceptance::TestSuite.new(
         name, @hosts, options, @config, failure_strategy
       ).run_and_raise_on_failure
+
+      return { :success => suite.success?, :name => suite.name }
     end
 
     def setup_options

@@ -15,20 +15,22 @@ module PuppetAcceptance
     class PendingTest < Exception; end
     class SkipTest < Exception; end
 
-    attr_reader :version, :config, :logger, :options, :path, :fail_flag, :usr_home,
-                :test_status, :exception, :runtime, :teardown_procs, :result
+    attr_reader :version, :config, :logger, :options, :path, :fail_flag,
+                :usr_home, :test_status, :exception, :runtime, :teardown_procs,
+                :result, :suite
 
-    def initialize(hosts, logger, config, options={}, path=nil)
-      @version = config['VERSION']
-      @config  = config['CONFIG']
-      @hosts   = hosts
-      @logger = logger
-      @options = options
-      @path    = path
-      @usr_home = ENV['HOME']
-      @test_status = :pass
-      @exception = nil
-      @runtime = nil
+    def initialize( suite, path = nil)
+      @suite          = suite
+      @version        = suite.config['VERSION']
+      @config         = suite.config['CONFIG']
+      @hosts          = suite.hosts
+      @logger         = suite.logger
+      @options        = suite.options
+      @path           = path
+      @usr_home       = ENV['HOME']
+      @test_status    = :pass
+      @exception      = nil
+      @runtime        = nil
       @teardown_procs = []
       #
       # We put this on each wrapper (rather than the class) so that methods
@@ -90,6 +92,11 @@ module PuppetAcceptance
         hash['HOSTS'][host.name] = host.overrides
       end
       hash
+    end
+
+    def previous_failures?
+      failed_suites = suite.previous_suites.select {|run| !run[:success] }
+      return failed_suites.empty? false : failed_suites
     end
 
     #
