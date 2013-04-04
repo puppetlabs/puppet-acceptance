@@ -1,7 +1,7 @@
 test_name "Revert VMs" do
   skip_test 'vmrun option not specified' unless options[:vmrun]
 
-  VMRUN_TYPES = ['solaris', 'blimpy', 'vsphere', 'fusion']
+  VMRUN_TYPES = ['solaris', 'blimpy', 'vsphere', 'vcloud', 'fusion']
   DEFAULT_HYPERVISOR = options[:vmrun]
 
   # NOTE: this code is shamelessly stolen from facter's 'domain' fact, but
@@ -154,7 +154,7 @@ test_name "Revert VMs" do
     hypervisor.close
   end
 
-  if virtual_machines['vsphere']
+  if virtual_machines['vsphere'] or virtual_machines['vcloud']
     require 'yaml' unless defined?(YAML)
     require File.expand_path(File.join(File.dirname(__FILE__),
                                        '..', '..','lib', 'puppet_acceptance',
@@ -168,34 +168,58 @@ test_name "Revert VMs" do
     vsphere_helper = VsphereHelper.new( vsphere_credentials )
 
     vsphere_vms = {}
-    virtual_machines['vsphere'].each do |h|
-      name = h["vmname"] || h.name
-      real_snap = h["snapshot"] || snap
-      vsphere_vms[name] = real_snap
-    end
-    vms = vsphere_helper.find_vms(vsphere_vms.keys)
-    vsphere_vms.each_pair do |name, snap|
-      unless vm = vms[name]
-        fail_test("Couldn't find VM #{name} in vSphere!")
+    if virtual_machines['vsphere']
+      virtual_machines['vsphere'].each do |h|
+        name = h["vmname"] || h.name
+        real_snap = h["snapshot"] || snap
+        vsphere_vms[name] = real_snap
       end
+      vms = vsphere_helper.find_vms(vsphere_vms.keys)
+      vsphere_vms.each_pair do |name, snap|
+        unless vm = vms[name]
+          fail_test("Couldn't find VM #{name} in vSphere!")
+        end
 
-      snapshot = vsphere_helper.find_snapshot(vm, snap) or
-        fail_test("Could not find snapshot #{snap} for vm #{vm.name}")
+        snapshot = vsphere_helper.find_snapshot(vm, snap) or
+          fail_test("Could not find snapshot #{snap} for vm #{vm.name}")
 
-      logger.notify "Reverting #{vm.name} to snapshot #{snap}"
-      start = Time.now
-      # This will block for each snapshot...
-      # The code to issue them all and then wait until they are all done sucks
-      snapshot.RevertToSnapshot_Task.wait_for_completion
-
-      time = Time.now - start
-      logger.notify "Spent %.2f seconds reverting" % time
-
-      unless vm.runtime.powerState == "poweredOn"
-        logger.notify "Booting #{vm.name}"
+        logger.notify "Reverting #{vm.name} to snapshot #{snap}"
         start = Time.now
-        vm.PowerOnVM_Task.wait_for_completion
-        logger.notify "Spent %.2f seconds booting #{vm.name}" % (Time.now - start)
+        # This will block for each snapshot...
+        # The code to issue them all and then wait until they are all done sucks
+        snapshot.RevertToSnapshot_Task.wait_for_completion
+
+        time = Time.now - start
+        logger.notify "Spent %.2f seconds reverting" % time
+
+        unless vm.runtime.powerState == "poweredOn"
+          logger.notify "Booting #{vm.name}"
+          start = Time.now
+          vm.PowerOnVM_Task.wait_for_completion
+          logger.notify "Spent %.2f seconds booting #{vm.name}" % (Time.now - start)
+        end
+      end
+    elsif virtual_machines['vcloud']
+      virtual_machines['vcloud'].each do |h|
+        # Generate a 15-character randomized hostname
+        o =  [('a'..'z'),('0'..'9')].map{|i| i.to_a}.flatten
+        h["vmname"] = (0...15).map{o[rand(o.length)]}.join
+
+        logger.notify "Deploying #{h["vmname"]} (#{h.name}) to #{@config["folder"]} from template #{h["template"]}"
+        start = Time.now
+
+        # Put the VM in the specified folder and resource pool
+        relocateSpec = RbVmomi::VIM.VirtualMachineRelocateSpec(
+          :datastore => vsphere_helper.find_datastore(@config["datastore"]),
+          :pool      => vsphere_helper.find_pool(@config["resourcepool"])
+        )
+        spec = RbVmomi::VIM.VirtualMachineCloneSpec( :location => relocateSpec, :powerOn => true, :template => false )
+
+        # Deploy!  From a template!
+        vm = vsphere_helper.find_vms(h["template"])
+        vm[h["template"]].CloneVM_Task( :folder => vsphere_helper.find_folder(@config["folder"]), :name => h["vmname"], :spec => spec ).wait_for_completion
+
+        logger.notify "Spend %.2f seconds deploying #{h.name}" % (Time.now - start)
       end
     end
 
