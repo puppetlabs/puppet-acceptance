@@ -40,7 +40,7 @@ test_name "Remove acceptance VMs" do
     fleet.destroy
   end
 
-  if virtual_machines['vsphere'] and not options[:preserve_hosts]
+  if virtual_machines['vsphere'] or virtual_machines['vcloud'] and not options[:preserve_hosts]
     require File.expand_path(File.join(File.dirname(__FILE__),
                                        '..', '..','lib', 'puppet_acceptance',
                                        'utils', 'vsphere_helper'))
@@ -53,23 +53,43 @@ test_name "Remove acceptance VMs" do
 
     vsphere_helper = VsphereHelper.new( vsphere_credentials )
 
-    vm_names = virtual_machines['vsphere'].map {|h| h['vmname'] || h.name }
-    vms = vsphere_helper.find_vms vm_names
-    vm_names.each do |name|
-      unless vm = vms[name]
-        fail_test("Couldn't find VM #{name} in vSphere!")
-      end
+    if virtual_machines['vsphere']
+      vm_names = virtual_machines['vsphere'].map { |h| h['vmname'] || h.name }
+      vms = vsphere_helper.find_vms vm_names
+      vm_names.each do |name|
+        unless vm = vms[name]
+          fail_test("Couldn't find VM #{name} in vSphere!")
+        end
 
-      if vm.runtime.powerState == "poweredOn"
-        logger.notify "Shutting down #{vm.name}"
+        if vm.runtime.powerState == "poweredOn"
+          logger.notify "Shutting down #{vm.name}"
+          start = Time.now
+          vm.PowerOffVM_Task.wait_for_completion
+          logger.notify "Spent %.2f seconds halting #{vm.name}" % (Time.now - start)
+        end
+      end
+    elsif virtual_machines['vcloud']
+      vm_names = virtual_machines['vcloud'].map { |h| h['vmname'] || h.name }
+      vms = vsphere_helper.find_vms vm_names
+      vm_names.each do |name|
+        unless vm = vms[name]
+          fail_test("Couldn't find VM #{name} in vSphere!")
+        end
+
+        if vm.runtime.powerState == "poweredOn"
+          logger.notify "Shutting down #{vm.name}"
+          start = Time.now
+          vm.PowerOffVM_Task.wait_for_completion
+          logger.notify "Spent %.2f seconds halting #{vm.name}" % (Time.now - start)
+        end
+
+        logger.notify "Destroying #{vm.name}"
         start = Time.now
-        vm.PowerOffVM_Task.wait_for_completion
-        logger.notify(
-          "Spent %.2f seconds halting #{vm.name}" % (Time.now - start) )
+        vm.Destroy_Task
+        logger.notify "Spent %.2f seconds destroying #{vm.name}" % (Time.now - start)
       end
     end
 
     vsphere_helper.close
-
   end
 end
