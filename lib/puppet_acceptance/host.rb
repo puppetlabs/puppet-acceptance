@@ -101,7 +101,11 @@ module PuppetAcceptance
       # I've always found this confusing
       cmdline = command.cmd_line(self)
 
-      @logger.debug "\n#{self} $ #{cmdline}" unless options[:silent]
+      if @defaults['vmname']
+        @logger.debug "\n#{self} (#{@name}) $ #{cmdline}" unless options[:silent]
+      else
+        @logger.debug "\n#{self} $ #{cmdline}" unless options[:silent]
+      end
 
       output_callback = logger.method(:host_output)
 
