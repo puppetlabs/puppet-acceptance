@@ -201,10 +201,6 @@ test_name "Revert VMs" do
       end
     elsif virtual_machines['vcloud']
       virtual_machines['vcloud'].each do |h|
-        # Generate a 15-character randomized hostname
-        o =  [('a'..'z'),('0'..'9')].map{|i| i.to_a}.flatten
-        h["vmname"] = (0...15).map{o[rand(o.length)]}.join
-
         logger.notify "Deploying #{h["vmname"]} (#{h.name}) to #{@config["folder"]} from template #{h["template"]}"
         start = Time.now
 
@@ -219,7 +215,7 @@ test_name "Revert VMs" do
         vm = vsphere_helper.find_vms(h["template"])
         vm[h["template"]].CloneVM_Task( :folder => vsphere_helper.find_folder(@config["folder"]), :name => h["vmname"], :spec => spec ).wait_for_completion
 
-        logger.notify "Spend %.2f seconds deploying #{h.name}" % (Time.now - start)
+        logger.notify "Spent %.2f seconds deploying #{h["vmname"]} (#{h.name})" % (Time.now - start)
       end
     end
 

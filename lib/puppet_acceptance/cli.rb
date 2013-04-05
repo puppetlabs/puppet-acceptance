@@ -19,6 +19,12 @@ module PuppetAcceptance
 
       @hosts =  []
       @config['HOSTS'].each_key do |name|
+        if @options[:vmrun] == 'vcloud'
+          # Generate a 15-character randomized hostname
+          o =  [('a'..'z'),('0'..'9')].map{|i| i.to_a}.flatten
+          @config['HOSTS'][name]['vmname'] = (0...15).map{o[rand(o.length)]}.join
+        end
+
         @hosts << PuppetAcceptance::Host.create(name, @options, @config)
       end
     end
