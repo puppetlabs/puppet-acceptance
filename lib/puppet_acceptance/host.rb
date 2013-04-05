@@ -76,7 +76,7 @@ module PuppetAcceptance
     end
 
     def to_s
-      @name
+      @defaults['vmname'] || @name
     end
 
     def + other
@@ -88,7 +88,7 @@ module PuppetAcceptance
     end
 
     def connection
-      @connection ||= SshConnection.connect( self['ip'] || @config['HOSTS'][@name]['vmname'] || @name,
+      @connection ||= SshConnection.connect( self['ip'] || @name,
                                              self['user'],
                                              self['ssh'] )
     end
