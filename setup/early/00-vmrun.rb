@@ -200,9 +200,9 @@ test_name "Revert VMs" do
         end
       end
     elsif virtual_machines['vcloud']
-      virtual_machines['vcloud'].each do |h|
+      start = Time.now
+      virtual_machines['vcloud'].each_with_index do |h, i|
         logger.notify "Deploying #{h["vmname"]} (#{h.name}) to #{@config["folder"]} from template #{h["template"]}"
-        start = Time.now
 
         # Put the VM in the specified folder and resource pool
         relocateSpec = RbVmomi::VIM.VirtualMachineRelocateSpec(
@@ -211,23 +211,15 @@ test_name "Revert VMs" do
         )
         spec = RbVmomi::VIM.VirtualMachineCloneSpec( :location => relocateSpec, :powerOn => true, :template => false )
 
-        # Deploy!  From a template!
+        # Deploy!  From a template!  In parallel (sort of)!
         vm = vsphere_helper.find_vms(h["template"])
-        vm[h["template"]].CloneVM_Task( :folder => vsphere_helper.find_folder(@config["folder"]), :name => h["vmname"], :spec => spec ).wait_for_completion
-
-        # Wait for the template to register itself with vCenter...
-        logger.notify "Waiting for #{h["vmname"]} (#{h.name}) to register with vCenter"
-        start2 = Time.now
-
-        vm = vsphere_helper.find_vms(h["vmname"])
-
-        while vm[h["vmname"]].guestHeartbeatStatus == 'gray'
-          sleep 1
+        if i == virtual_machines['vcloud'].length - 1
+          vm[h["template"]].CloneVM_Task( :folder => vsphere_helper.find_folder(@config["folder"]), :name => h["vmname"], :spec => spec ).wait_for_completion
+        else
+          vm[h["template"]].CloneVM_Task( :folder => vsphere_helper.find_folder(@config["folder"]), :name => h["vmname"], :spec => spec )
         end
-
-        logger.notify "Spent %.2f seconds waiting for #{h["vmname"]} (#{h.name}) to register with vCenter" % (Time.now - start2)
-        logger.notify "Spent %.2f seconds deploying #{h["vmname"]} (#{h.name})" % (Time.now - start)
       end
+        logger.notify "Spent %.2f seconds deploying VMs" % (Time.now - start)
     end
 
     vsphere_helper.close
