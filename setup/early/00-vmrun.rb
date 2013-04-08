@@ -215,6 +215,17 @@ test_name "Revert VMs" do
         vm = vsphere_helper.find_vms(h["template"])
         vm[h["template"]].CloneVM_Task( :folder => vsphere_helper.find_folder(@config["folder"]), :name => h["vmname"], :spec => spec ).wait_for_completion
 
+        # Wait for the template to register itself with vCenter...
+        logger.notify "Waiting for #{h["vmname"]} (#{h.name}) to register with vCenter"
+        start2 = Time.now
+
+        vm = vsphere_helper.find_vms(h["vmname"])
+
+        while vm[h["vmname"]].guestHeartbeatStatus == 'gray'
+          sleep 1
+        end
+
+        logger.notify "Spent %.2f seconds waiting for #{h["vmname"]} (#{h.name}) to register with vCenter" % (Time.now - start2)
         logger.notify "Spent %.2f seconds deploying #{h["vmname"]} (#{h.name})" % (Time.now - start)
       end
     end
