@@ -219,7 +219,7 @@ test_name "Revert VMs" do
           vm[h["template"]].CloneVM_Task( :folder => vsphere_helper.find_folder(@config["folder"]), :name => h["vmname"], :spec => spec )
         end
       end
-        logger.notify "Spent %.2f seconds deploying VMs" % (Time.now - start)
+      logger.notify "Spent %.2f seconds deploying VMs" % (Time.now - start)
     end
 
     vsphere_helper.close
