@@ -223,6 +223,27 @@ test_name "Revert VMs" do
 
       start = Time.now
       virtual_machines['vcloud'].each_with_index do |h, i|
+        logger.notify "Waiting for #{h["vmname"]} (#{h.name}) to register with vSphere"
+        try = 1
+        last_wait = 0
+        wait = 1
+
+        until vsphere_helper.find_vms(h["vmname"])[h["vmname"]].summary.guest.toolsRunningStatus == 'guestToolsRunning'
+          if try <= 11
+            puts "Trying again in #{wait} seconds"
+
+            sleep wait
+            (last_wait, wait) = wait, last_wait + wait
+            try += 1
+          else
+            fail_test("vSphere registration failed after #{wait} seconds")
+          end
+        end
+      end
+      logger.notify "Spent %.2f seconds waiting for vSphere registration" % (Time.now - start)
+
+      start = Time.now
+      virtual_machines['vcloud'].each_with_index do |h, i|
         logger.notify "Waiting for #{h["vmname"]} DNS resolution"
         try = 1
         last_wait = 0
