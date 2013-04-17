@@ -230,8 +230,6 @@ test_name "Revert VMs" do
 
         until vsphere_helper.find_vms(h["vmname"])[h["vmname"]].summary.guest.toolsRunningStatus == 'guestToolsRunning'
           if try <= 11
-            puts "Trying again in #{wait} seconds"
-
             sleep wait
             (last_wait, wait) = wait, last_wait + wait
             try += 1
@@ -253,8 +251,6 @@ test_name "Revert VMs" do
           Socket.getaddrinfo(h["vmname"], nil)
         rescue
           if try <= 11
-            puts "Trying again in #{wait} seconds"
-
             sleep wait
             (last_wait, wait) = wait, last_wait + wait
             try += 1
