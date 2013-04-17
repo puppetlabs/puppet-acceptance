@@ -220,6 +220,32 @@ test_name "Revert VMs" do
         end
       end
       logger.notify "Spent %.2f seconds deploying VMs" % (Time.now - start)
+
+      start = Time.now
+      virtual_machines['vcloud'].each_with_index do |h, i|
+        logger.notify "Waiting for #{h["vmname"]} DNS resolution"
+        try = 1
+        last_wait = 0
+        wait = 1
+
+        begin
+          Socket.getaddrinfo(h["vmname"], nil)
+        rescue
+          if try <= 11
+            puts "Trying again in #{wait} seconds"
+
+            sleep wait
+            (last_wait, wait) = wait, last_wait + wait
+            try += 1
+
+            retry
+          else
+            fail_test("DNS resolution failed after #{wait} seconds")
+          end
+        end
+
+      end
+      logger.notify "Spent %.2f seconds waiting for DNS resolution" % (Time.now - start)
     end
 
     vsphere_helper.close
