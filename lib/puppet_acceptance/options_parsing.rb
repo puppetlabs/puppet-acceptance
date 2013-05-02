@@ -195,7 +195,7 @@ module PuppetAcceptance
           $dry_run = bool
         end
 
-        @defaults[:fail_fast] = nil
+        @defaults[:fail_fast] = false
         opts.on '--fail-fast',
                 'End test run after first failure' do |bool|
           @options[:fail_fast] = bool

@@ -32,11 +32,11 @@ module PuppetAcceptance
 
         run_suite('pre-setup', pre_options, :fail_fast) if @options[:pre_script]
         run_suite('setup', setup_options, :fail_fast)
-        run_suite('pre-suite', pre_suite_options)
+        run_suite('pre-suite', pre_suite_options, @options[:fail_fast])
         begin
-          run_suite('acceptance', @options) unless @options[:installonly]
+          run_suite('acceptance', @options, @options[:fail_fast]) unless @options[:installonly]
         ensure
-          run_suite('post-suite', post_suite_options)
+          run_suite('post-suite', post_suite_options, @options[:fail_fast])
         end
 
       ensure
