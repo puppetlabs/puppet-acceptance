@@ -228,7 +228,9 @@ test_name "Revert VMs" do
         last_wait = 0
         wait = 1
 
-        until vsphere_helper.find_vms(h["vmname"])[h["vmname"]].summary.guest.toolsRunningStatus == 'guestToolsRunning'
+        until
+          vsphere_helper.find_vms(h["vmname"])[h["vmname"]].summary.guest.toolsRunningStatus == 'guestToolsRunning' and
+          vsphere_helper.find_vms(h["vmname"])[h["vmname"]].summary.guest.ipAddress != nil
           if try <= 11
             sleep wait
             (last_wait, wait) = wait, last_wait + wait
@@ -238,6 +240,7 @@ test_name "Revert VMs" do
           end
         end
       end
+
       logger.notify "Spent %.2f seconds waiting for vSphere registration" % (Time.now - start)
 
       start = Time.now
