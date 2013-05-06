@@ -14,7 +14,12 @@ module PuppetAcceptance
       @config = PuppetAcceptance::TestConfig.new(@options[:config], @options)
 
       if (@options[:helper])
-        require @options[:helper]
+        begin
+          require @options[:helper]
+        rescue LoadError
+          $LOAD_PATH.unshift(File.expand_path("../../../", __FILE__))
+          require @options[:helper]
+        end
       end
 
       @hosts =  []
