@@ -34,20 +34,28 @@ module PuppetAcceptance
         if File.file? root then
           @test_files << root
         else
-          @test_files += Dir.glob(
+          new_test_files = Dir.glob(
             File.join(root, "**/*.rb")
           ).select { |f| File.file?(f) }
+
+          if options[:random]
+            # If we are randomizing, ensure we have a seed and then
+            # randomize the files in this directory
+            unless @random_seed
+              @random_seed = (options[:random] == true ? Time.now : options[:random]).to_i
+              srand @random_seed
+            end
+            new_test_files.sort_by! { rand }
+          else
+            # If we are not randomizing, we should sort the files in
+            # this directory, to ensure consistent test execution
+            new_test_files.sort!
+          end
+          @test_files += new_test_files
         end
       end
       fail "no test files found..." if @test_files.empty?
 
-      if options[:random]
-        @random_seed = (options[:random] == true ? Time.now : options[:random]).to_i
-        srand @random_seed
-        @test_files = @test_files.sort_by { rand }
-      else
-        @test_files = @test_files.sort
-      end
     end
 
     def run
