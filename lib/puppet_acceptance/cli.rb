@@ -36,7 +36,7 @@ module PuppetAcceptance
             @logger.debug "Setup: revert vms to snapshot"
             @vm_controller.revert 
           rescue Exception => e
-            @logger.error(e.inspect)
+            @logger.error("Failed: #{e.inspect}")
             bt = e.backtrace
             @logger.pretty_backtrace(bt).each_line do |line|
               @logger.error(line)
@@ -61,7 +61,11 @@ module PuppetAcceptance
             @vm_controller.cleanup
             @hosts.each {|host| host.close }
           rescue Exception => e
-            puts e
+            @logger.error("Failed: #{e.inspect}")
+            bt = e.backtrace
+            @logger.pretty_backtrace(bt).each_line do |line|
+              @logger.error(line)
+            end
             raise
           end
         end
