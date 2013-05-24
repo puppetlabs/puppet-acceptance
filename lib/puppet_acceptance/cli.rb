@@ -62,6 +62,7 @@ module PuppetAcceptance
             @hosts.each {|host| host.close }
           rescue Exception => e
             puts e
+            raise
           end
         end
       end
