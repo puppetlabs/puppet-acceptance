@@ -304,7 +304,7 @@ module PuppetAcceptance
             end
           rescue
           end
-          sleep rand(20)
+          sleep sleep_time
           retry
         else
           @logger.error("Retried Fog #{fleet_retries} times, giving up and throwing the exception")
@@ -333,7 +333,7 @@ module PuppetAcceptance
 
       #Install git and ruby if we are not pe
       #HACK HACK HACK, type should not be in here
-      if config[:type] !~ /pe/
+      if @config[:type] !~ /pe/
         blimpy_install_git_and_ruby(blimpy_hosts)
       end
     end #revert_blimpy
