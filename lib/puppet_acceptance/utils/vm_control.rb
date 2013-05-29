@@ -362,7 +362,7 @@ module PuppetAcceptance
     
         start = Time.now
         vcloud_hosts.each_with_index do |h, i|
-          @logger.notify "Waiting for #{h['vmhostname']} (#{h.name}) to register with vSphere"
+          @logger.notify "Booting #{h['vmhostname']} (#{h.name}) and waiting for it to register with vSphere"
           try = 1
           last_wait = 0
           wait = 1
@@ -378,7 +378,7 @@ module PuppetAcceptance
             end
           end
         end
-        @logger.notify "Spent %.2f seconds waiting for vSphere registration" % (Time.now - start)
+        @logger.notify "Spent %.2f seconds booting and waiting for vSphere registration" % (Time.now - start)
     
         start = Time.now
         vcloud_hosts.each_with_index do |h, i|
