@@ -335,13 +335,22 @@ module PuppetAcceptance
           h['vmhostname'] = (0...15).map{o[rand(o.length)]}.join
     
           @logger.notify "Deploying #{h['vmhostname']} (#{h.name}) to #{@config['folder']} from template #{h['template']}"
-    
+
+          # Add VM annotation
+          configSpec = RbVmomi::VIM.VirtualMachineConfigSpec(
+            :annotation =>
+              'Base template:  ' + h['template'] + "\n" +
+              'Creation time:  ' + Time.now.strftime("%Y-%m-%d %H:%M") + "\n\n" +
+              'CI build link:  ' + ( ENV['BUILD_URL'] || 'Deployed independently of CI' )
+          )
+
           # Put the VM in the specified folder and resource pool
           relocateSpec = RbVmomi::VIM.VirtualMachineRelocateSpec(
             :datastore => vsphere_helper.find_datastore(@config['datastore']),
             :pool      => vsphere_helper.find_pool(@config['resourcepool'])
           )
           spec = RbVmomi::VIM.VirtualMachineCloneSpec(
+            :config   => configSpec,
             :location => relocateSpec,
             :powerOn  => true,
             :template => false
