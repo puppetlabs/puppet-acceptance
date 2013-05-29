@@ -461,28 +461,15 @@ module PuppetAcceptance
         end
       end
       @logger.debug "virtual machines reverted and ready"
+    rescue StandardError => e
+      @logger.error "failed to revert virtual machines"
+      @logger.error(e.inspect)
+      bt = e.backtrace
+      @logger.pretty_backtrace(bt).each_line do |line|
+        @logger.error(line)
+      end
+      raise "Failed to revert vms"
     end #revert
-
-    def preserve_hosts(hosts)
-      hosts_config = {}
-      hosts.each do |host|
-        hosts_config[host.name] = {
-          'roles' => host['roles'],
-          'platform' => host['platform'],
-          'ip' => host['ip'],
-        }
-      end
-
-      exported_config = {
-        'HOSTS' => hosts_config,
-        'CONFIG' => @config
-      }
-
-      FileUtils.mkdir_p('tmp')
-      File.open("tmp/#{File.basename(@options[:config])}", 'w') do |f|
-        f.write(exported_config.to_yaml)
-      end
-    end #preserve_hosts
 
     def cleanup_blimpy(blimpy_hosts)
       fleet = Blimpy.fleet do |fleet|
@@ -557,9 +544,7 @@ module PuppetAcceptance
     end
 
     def cleanup
-      if @options[:preserve_hosts]
-        preserve_hosts(@hosts)
-      else
+      if not @options[:preserve_hosts]
         @virtual_machines.keys.each do |type|
           case type
             when /blimpy/
@@ -572,6 +557,14 @@ module PuppetAcceptance
         end
         @logger.debug "virtual machines cleaned up"
       end
+    rescue StandardError => e
+      @logger.error "failed to cleanup virtual machines"
+      @logger.error(e.inspect)
+      bt = e.backtrace
+      @logger.pretty_backtrace(bt).each_line do |line|
+        @logger.error(line)
+      end
+      raise "Failed during vm cleanup"
     end
   end
 end
