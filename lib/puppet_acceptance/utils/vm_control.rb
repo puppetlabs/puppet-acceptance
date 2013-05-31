@@ -28,7 +28,7 @@ module PuppetAcceptance
       def get_domain_name(host)
         domain = nil
         search = nil
-        resolv_conf = host.exec(HostCommand.new("cat /etc/resolv.conf")).stdout
+        resolv_conf = host.exec(Command.new("cat /etc/resolv.conf")).stdout
         resolv_conf.each_line { |line|
           if line =~ /^\s*domain\s+(\S+)/
             domain = $1
@@ -96,7 +96,7 @@ module PuppetAcceptance
           @logger.notify "Reverting #{vm_name} to snapshot #{snap}"
           start = Time.now
           # Restore AIX image, ID'd by the hostname
-          hypervisor.exec(HostCommand.new("cd pe-aix && rake restore:#{host.name}"))
+          hypervisor.exec(Command.new("cd pe-aix && rake restore:#{host.name}"))
           time = Time.now - start
           @logger.notify "Spent %.2f seconds reverting" % time
         end
@@ -139,17 +139,17 @@ module PuppetAcceptance
 
           @logger.notify "Reverting #{vm_name} to snapshot #{snap}"
           start = Time.now
-          hypervisor.exec(HostCommand.new("sudo /sbin/zfs rollback -Rf #{vmpath}/#{vm_name}@#{snap}"))
+          hypervisor.exec(Command.new("sudo /sbin/zfs rollback -Rf #{vmpath}/#{vm_name}@#{snap}"))
           snappaths.each do |spath|
             @logger.notify "Reverting #{vm_name}/#{spath} to snapshot #{snap}"
-            hypervisor.exec(HostCommand.new("sudo /sbin/zfs rollback -Rf #{vmpath}/#{vm_name}/#{spath}@#{snap}"))
+            hypervisor.exec(Command.new("sudo /sbin/zfs rollback -Rf #{vmpath}/#{vm_name}/#{spath}@#{snap}"))
           end
           time = Time.now - start
           @logger.notify "Spent %.2f seconds reverting" % time
 
           @logger.notify "Booting #{vm_name}"
           start = Time.now
-          hypervisor.exec(HostCommand.new("sudo /sbin/zoneadm -z #{vm_name} boot"))
+          hypervisor.exec(Command.new("sudo /sbin/zoneadm -z #{vm_name} boot"))
           @logger.notify "Spent %.2f seconds booting #{vm_name}" % (Time.now - start)
         end
         hypervisor.close
@@ -302,15 +302,15 @@ module PuppetAcceptance
           name = ship.name
           host = hosts.select { |host| host.name == name }[0]
           host['ip'] = ship.dns
-          host.exec(HostCommand.new("hostname #{name}"))
-          ip = host.exec(HostCommand.new("ip a|awk '/g/{print$2}' | cut -d/ -f1 | head -1")).stdout.chomp
+          host.exec(Command.new("hostname #{name}"))
+          ip = host.exec(Command.new("ip a|awk '/g/{print$2}' | cut -d/ -f1 | head -1")).stdout.chomp
           domain = get_domain_name(host)
           etc_hosts += "#{ip}\t#{name}\t#{name}.#{domain}\n"
         end
 
         # Send our hosts information to the nodes
         blimpy_hosts.each do |host|
-          host.exec(HostCommand.new("echo '#{etc_hosts}' > /etc/hosts"))
+          host.exec(Command.new("echo '#{etc_hosts}' > /etc/hosts"))
         end
       end #revert_blimpy
 
