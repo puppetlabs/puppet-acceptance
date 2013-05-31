@@ -10,9 +10,7 @@ module PuppetAcceptance
       :host => %w(hieralibdir hierapuppetlibdir
                   pluginlibpath puppetlibdir
                   facterlibdir),
-      :opts => { :additive => true, 
-                 :separator => {:host => 'pathseparator' }
-      }
+      :opts => { :additive => true, :separator => ':' }
     }
 
     DEFAULT_GIT_PATH = {
