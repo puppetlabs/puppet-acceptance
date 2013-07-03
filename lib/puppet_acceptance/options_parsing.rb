@@ -63,6 +63,7 @@ module PuppetAcceptance
       @options[:load_path] = []
       @options[:pre_suite] = []
       @options[:post_suite] = []
+      @options[:helper] = []
       @options_from_file = {}
 
       optparse = OptionParser.new do|opts|
@@ -91,11 +92,11 @@ module PuppetAcceptance
           @options[:type] = type
         end
 
-        @defaults[:helper] = nil
+        @defaults[:helper] = []
         opts.on '--helper PATH/TO/SCRIPT',
                 'Ruby file evaluated prior to tests',
                 '(a la spec_helper)' do |script|
-          @options[:helper] = script
+          @options[:helper] << script
         end
 
         @defaults[:load_path] = []
