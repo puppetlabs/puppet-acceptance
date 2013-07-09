@@ -47,58 +47,11 @@ module PuppetAcceptance
           :pool         => vsphere_helper.find_pool(@config['resourcepool']),
           :diskMoveType => :moveChildMostDiskBacking
         )
-
-###
-#
-#if platform = windows
-#
-        customizeSpec = RbVmomi::VIM.CustomizationSpec(
-          :identity         => RbVmomi::VIM.CustomizationSysprep(
-            :guiUnattended    => RbVmomi::VIM.CustomizationGuiUnattended(
-              :autoLogon        => false,
-              :autoLogonCount   => 1,
-              :timeZone         => 105
-            ),
-            :identification   => RbVmomi::VIM.CustomizationIdentification(),
-            :userData         => RbVmomi::VIM.CustomizationUserData(
-              :fullName         => 'Delivery',
-              :orgName          => 'Puppet Labs',
-              :productId        => '(not specified)',
-              :computerName     => RbVmomi::VIM.CustomizationFixedName(
-                :name             => h['vmhostname']
-              )
-            )
-          ),
-          :globalIPSettings => RbVmomi::VIM.CustomizationGlobalIPSettings(
-            :dnsServerList    => [ '10.16.22.10', '10.16.22.11' ],
-            :dnsSuffixList    => [ 'delivery.puppetlabs.net' ]
-          ),
-          :nicSettingMap    => [ RbVmomi::VIM.CustomizationAdapterMapping(
-            :adapter          => RbVmomi::VIM.CustomizationIPSettings(
-              :ip               => RbVmomi::VIM.CustomizationDhcpIpGenerator()
-            )
-          ) ],
-          :options          => RbVmomi::VIM.CustomizationWinOptions(
-            :changeSID        => true,
-            :deleteAccounts   => false
-          )
-        )
-
-#
-#        puts customizeSpec.to_yaml
-#
-
-#
-#/if
-#
-###
-
         spec = RbVmomi::VIM.VirtualMachineCloneSpec(
-          :config        => configSpec,
-          :location      => relocateSpec,
-          :customization => customizeSpec,
-          :powerOn       => true,
-          :template      => false
+          :config   => configSpec,
+          :location => relocateSpec,
+          :powerOn  => true,
+          :template => false
         )
 
         # Deploy from specified template
