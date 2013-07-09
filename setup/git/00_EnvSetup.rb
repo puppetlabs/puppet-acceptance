@@ -12,9 +12,6 @@ hosts.each do |host|
       step "Installing #{gem}"
       on host, "cmd /c gem install #{gem} --no-ri --no-rdoc"
     end
-  when /el-5/
-    step "Installing EPEL"
-    on host, "wget http://download3.fedora.redhat.com/pub/epel/5Server/i386/epel-release-5-4.noarch.rpm && rpm -ihv epel-release-5-4.noarch.rpm"
   when /el-/
     step "Installing Git"
     on host, "yum -y install git"
