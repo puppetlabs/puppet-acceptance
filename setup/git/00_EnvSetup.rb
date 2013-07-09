@@ -18,7 +18,7 @@ hosts.each do |host|
   when /el-/
     step "Installing Git"
     on host, "yum -y install git"
-  when /debian/ or /ubuntu/
+  when /debian|ubuntu/
     step "Installing Git"
     on host, "apt-get -y install git-core"
   else
