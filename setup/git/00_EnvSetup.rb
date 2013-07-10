@@ -12,10 +12,10 @@ hosts.each do |host|
       step "Installing #{gem}"
       on host, "cmd /c gem install #{gem} --no-ri --no-rdoc"
     end
-  when /el-/
+  when /el-|fc-/
     step "Installing Git"
     on host, "yum -y install git"
-  when /debian|ubuntu/
+  when /debian-|ubuntu-/
     step "Installing Git"
     on host, "apt-get -y install git-core"
   else
