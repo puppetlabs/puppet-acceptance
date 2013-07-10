@@ -5,8 +5,11 @@ module PuppetAcceptance
       @logger = PuppetAcceptance::Logger.new(@options)
       @options[:logger] = @logger
 
-      if not @options[:config] 
-        report_and_raise(@logger, RuntimeError.new("Argh!  There is no default for Config, specify one (-c or --config)!"), "CLI: initialize") 
+      if not @options[:config]
+        report_and_raise(@logger,
+                         RuntimeError.new(
+                           "Argh!  There is no default for Config, specify one (-c or --config)!"),
+                         "CLI: initialize")
       end
 
       @logger.debug("Options")
@@ -25,14 +28,12 @@ module PuppetAcceptance
 
       @config = PuppetAcceptance::TestConfig.new(@options[:config], @options)
 
-      #add additional paths to the LOAD_PATH
-      if not @options[:load_path].empty?
-        @options[:load_path].each do |path|
-          $LOAD_PATH << File.expand_path(path)
-        end
+      Array( @options[:load_path] ).each do |path|
+        $LOAD_PATH.unshift File.expand_path( path )
       end
-      @options[:helper].each do |helper|
-        require File.expand_path(helper)
+
+      Array( @options[:helper] ).each do |helper|
+        require File.expand_path( helper )
       end
 
       @hosts =  []
@@ -51,7 +52,7 @@ module PuppetAcceptance
                      [:repo_proxy, "Proxy packaging repositories on ubuntu, debian and solaris-11", Proc.new {@repo_controller.proxy_config}],
                      [:add_el_extras, "Add Extra Packages for Enterprise Linux (EPEL) repository to el-* hosts", Proc.new {@repo_controller.add_el_extras}],
                      [:add_master_entry, "Update /etc/hosts on master with master's ip", Proc.new {@setup.add_master_entry}]]
-      
+
       begin
         trap(:INT) do
           @logger.warn "Interrupt received; exiting..."
