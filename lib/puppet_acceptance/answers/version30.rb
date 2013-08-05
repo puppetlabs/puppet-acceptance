@@ -2,18 +2,16 @@ module PuppetAcceptance
   module Answers
     module Version30
 
-      def self.host_answers(host, master_certname, master, database, dashboard)
+      def self.host_answers(host, master_certname, master, database, dashboard, options)
         # Windows hosts don't have normal answers...
         return nil if host['platform'] =~ /windows/
 
         # Everything's an agent
         agent_a = {
-          :q_install => 'y',
           :q_puppetagent_install => 'y',
           :q_puppet_cloud_install => 'y',
           :q_verify_packages => ENV['q_verify_packages'] || 'y',
           :q_puppet_symlinks_install => 'y',
-          :q_vendor_packages_install => 'y',
           :q_puppetagent_certname => host,
           :q_puppetagent_server => master,
 
@@ -24,6 +22,12 @@ module PuppetAcceptance
           :q_puppet_enterpriseconsole_install => 'n',
           :q_puppetdb_install => 'n',
           :q_database_install => 'n',
+        }
+
+        # These base answers are needed by all
+        common_a = {
+          :q_install => 'y',
+          :q_vendor_packages_install => 'y',
         }
 
         # master/database answers
@@ -118,23 +122,42 @@ module PuppetAcceptance
           :q_run_updtvpkg => 'y',
         }
 
-        answers = agent_a.dup
+        answers = common_a.dup
+
+        unless options[:type] == :upgrade
+          answers.merge! agent_a
+        end
+
         if host == master
-          answers.merge! master_a
           answers.merge! master_console_a
-          answers.merge! master_database_a
+          unless options[:type] == :upgrade
+            answers.merge! master_a
+            answers.merge! master_database_a
+          end
         end
 
         if host == dashboard
-          answers.merge! console_a
           answers.merge! master_console_a
           answers.merge! console_database_a
+          unless options[:type] == :upgrade
+            answers.merge! console_a
+          else
+            answers[:q_database_export_dir] = '/tmp'
+          end
         end
 
         if host == database
+          if database != master
+            if options[:type] == :upgrade
+              # This is kinda annoying - if we're upgrading to 3.0 and are
+              # puppetdb, we're actually doing a clean install. We thus
+              # need the core agent answers.
+              answers.merge! agent_a
+            end
+            answers.merge! master_database_a
+          end
           answers.merge! database_a
           answers.merge! console_database_a
-          answers.merge! master_database_a
         end
 
         if host == master and host == database and host == dashboard
@@ -148,13 +171,21 @@ module PuppetAcceptance
         return answers
       end
 
-      def self.answers(hosts, master_certname)
+      def self.answers(hosts, master_certname, options)
         the_answers = {}
         database = only_host_with_role(hosts, 'database')
         dashboard = only_host_with_role(hosts, 'dashboard')
         master = only_host_with_role(hosts, 'master')
         hosts.each do |h|
-          the_answers[h.name] = host_answers(h, master_certname, master, database, dashboard)
+          if options[:type] == :upgrade and options[:from] =~ /\A3.0/
+            # 3.0.x to 3.0.x should require no answers
+            the_answers[h.name] = {
+              :q_install => 'y',
+              :q_install_vendor_packages => 'y',
+            }
+          else
+            the_answers[h.name] = host_answers(h, master_certname, master, database, dashboard, options)
+          end
         end
         return the_answers
       end

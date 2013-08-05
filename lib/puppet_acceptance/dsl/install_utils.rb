@@ -129,7 +129,7 @@ module PuppetAcceptance
         end
       end
 
-      def do_install hosts, version, path, pre_30, installer='puppet-enterprise-installer' 
+      def do_install hosts, version, path, pre_30, opts = {} 
         #convenience methods for installation
         ########################################################
         def installer_cmd(host, version, installer)
@@ -185,9 +185,11 @@ module PuppetAcceptance
         end
         ########################################################
         #start installation steps here
+        options[:installer] = 'puppet-enterprise-installer' unless options[:installer]
+        options[:type] = :install unless options[:type] 
         hostcert='uname | grep -i sunos > /dev/null && hostname || hostname -s'
         master_certname = on(master, hostcert).stdout.strip
-        answers = PuppetAcceptance::Answers.answers(version, hosts, master_certname)
+        answers = PuppetAcceptance::Answers.answers(version, hosts, master_certname, options)
         special_nodes = [master, database, dashboard].uniq
         real_agents = agents - special_nodes
 
@@ -204,11 +206,11 @@ module PuppetAcceptance
           # Database host was added in 3.0. Skip it if installing an older version
           next if host == database and host != master and host != dashboard and pre_30
           if host['platform'] =~ /windows/
-            on host, "#{installer_cmd(host, version, installer)} PUPPET_MASTER_SERVER=#{master} PUPPET_AGENT_CERTNAME=#{host}"
+            on host, "#{installer_cmd(host, version, options[:installer])} PUPPET_MASTER_SERVER=#{master} PUPPET_AGENT_CERTNAME=#{host}"
           else
             create_remote_file host, '/tmp/answers', PuppetAcceptance::Answers.answer_string(host, answers)
 
-            on host, "#{installer_cmd(host, version, installer)} -a /tmp/answers"
+            on host, "#{installer_cmd(host, version, options[:installer])} -a /tmp/answers"
           end
         end
 
@@ -270,12 +272,12 @@ module PuppetAcceptance
         do_install hosts, version, path, pre_30
       end
 
-      def upgrade_pe hosts, version, path 
+      def upgrade_pe hosts, version, path, from 
         pre_30 = version_is_less(version, '3.0')
         if pre_30
-          do_install(hosts, version, path, pre_30, 'puppet-enterprise-upgrader')
+          do_install(hosts, version, path, pre_30, :installer => 'puppet-enterprise-upgrader', :from => from)
         else
-          do_install(hosts, version, path, pre_30)
+          do_install(hosts, version, path, pre_30, :from => from)
         end
       end
 
