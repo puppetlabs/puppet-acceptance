@@ -129,14 +129,14 @@ module PuppetAcceptance
         end
       end
 
-      def do_install hosts, version, path, pre_30, opts = {} 
+      def do_install hosts, version, path, pre_30, options = {} 
         #convenience methods for installation
         ########################################################
         def installer_cmd(host, version, installer)
           if host['platform'] =~ /windows/
-            "cd /tmp && msiexec.exe /qn /i puppet-enterprise-#{version}.msi"
+            "cd #{host['working_dir']} && msiexec.exe /qn /i puppet-enterprise-#{version}.msi"
           else
-            "cd /tmp/#{host['dist']} && ./#{installer}"
+            "cd #{host['working_dir']}/#{host['dist']} && ./#{installer}"
           end
         end
         def link_exists?(link)
@@ -168,18 +168,18 @@ module PuppetAcceptance
                if not File.exists?("#{path}/#{filename}#{extension}")
                  raise "attempting installation on #{host}, #{path}/#{filename}#{extension} does not exist" 
                end
-               scp_to host, "#{path}/#{filename}#{extension}", "/tmp/#{filename}#{extension}"
+               scp_to host, "#{path}/#{filename}#{extension}", "#{host['working_dir']}/#{filename}#{extension}"
             else
                if not link_exists?("#{path}/#{filename}#{extension}")
                  raise "attempting installation on #{host}, #{path}/#{filename}#{extension} does not exist" 
                end
-               on host, "cd /tmp; curl #{path}/#{filename}#{extension} -o #{filename}#{extension}"
+               on host, "cd #{host['working_dir']}; curl #{path}/#{filename}#{extension} -o #{filename}#{extension}"
             end
             if extension =~ /gz/
-              on host, "cd /tmp; gunzip #{filename}#{extension}"
+              on host, "cd #{host['working_dir']}; gunzip #{filename}#{extension}"
             end
             if extension =~ /tar/
-              on host, "cd /tmp; tar -xvf #{filename}.tar"
+              on host, "cd #{host['working_dir']}; tar -xvf #{filename}.tar"
             end
           end
         end
@@ -193,11 +193,13 @@ module PuppetAcceptance
         special_nodes = [master, database, dashboard].uniq
         real_agents = agents - special_nodes
 
-        # Set PE distribution for all the hosts
+        # Set PE distribution for all the hosts, create working dir
         use_all_tar = ENV['PE_USE_ALL_TAR'] == 'true'
         hosts.each do |host|
           platform = use_all_tar ? 'all' : host['platform']
           host['dist'] = "puppet-enterprise-#{version}-#{platform}"
+          host['working_dir'] = "/tmp/" + Time.new.strftime("%Y-%m-%d_%H.%M.%S") #unique working dirs make me happy
+          on host, "mkdir #{host['working_dir']}"
         end
 
         fetch_puppet(hosts, version, path)
@@ -208,9 +210,9 @@ module PuppetAcceptance
           if host['platform'] =~ /windows/
             on host, "#{installer_cmd(host, version, options[:installer])} PUPPET_MASTER_SERVER=#{master} PUPPET_AGENT_CERTNAME=#{host}"
           else
-            create_remote_file host, '/tmp/answers', PuppetAcceptance::Answers.answer_string(host, answers)
+            create_remote_file host, "#{host['working_dir']}/answers", PuppetAcceptance::Answers.answer_string(host, answers)
 
-            on host, "#{installer_cmd(host, version, options[:installer])} -a /tmp/answers"
+            on host, "#{installer_cmd(host, version, options[:installer])} -a #{host['working_dir']}/answers"
           end
         end
 
@@ -266,18 +268,18 @@ module PuppetAcceptance
         return false
       end
 
-      def install_pe hosts, version, path
+      def install_pe version, path
         pre_30 = version_is_less(version, '3.0')
         step "Install #{version} PE on #{path}"
         do_install hosts, version, path, pre_30
       end
 
-      def upgrade_pe hosts, version, path, from 
+      def upgrade_pe version, path, from 
         pre_30 = version_is_less(version, '3.0')
         if pre_30
-          do_install(hosts, version, path, pre_30, :installer => 'puppet-enterprise-upgrader', :from => from)
+          do_install(hosts, version, path, pre_30, :type => :upgrade, :installer => 'puppet-enterprise-upgrader', :from => from)
         else
-          do_install(hosts, version, path, pre_30, :from => from)
+          do_install(hosts, version, path, pre_30, :type => :upgrade, :from => from)
         end
       end
 
