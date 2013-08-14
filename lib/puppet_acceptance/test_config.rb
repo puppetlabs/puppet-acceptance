@@ -65,7 +65,16 @@ module PuppetAcceptance
 
     def load_dependency_versions
       if is_pe?
-        version_file = ENV['pe_dep_versions'] || 'config/versions/pe_version'
+        version_file = ENV['pe_dep_versions'] 
+        if not version_file
+          if File.file?('config/versions/pe_version')
+            version_file = 'config/versions/pe_version'
+          elsif File.file?(File.expand_path(File.join(File.dirname(__FILE__), '../../config/versions/pe_version')))
+            version_file = File.expand_path(File.join(File.dirname(__FILE__), '../../config/versions/pe_version'))
+          else
+            raise 'No valid pe_version file specified'
+          end
+        end
         versions = YAML.load_file version_file
         versions
       end
