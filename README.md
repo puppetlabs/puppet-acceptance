@@ -305,7 +305,7 @@ Both options support directories, individual files and comma separated lists of 
 
     --pre-suite setup/early/mystep.rb,setup/early/mydir    
 ### Run the tests
-    bin/systest -c your_config.cfg --type pe -t test_repo/tests --debug
+    bundle exec systest -c your_config.cfg --type pe -t test_repo/tests --debug
 
 ### Failure management
 By default if a test fails the harness will move on and attempt the next test in the suite.  This may be undesirable when debugging.  The harness supports an optional `--fail-mode` to alter the default behavior on failure:
@@ -315,14 +315,14 @@ By default if a test fails the harness will move on and attempt the next test in
 - `stop`: After first failure do not test any subsequent tests in the given suite, do not run any cleanup steps, exit immediately.  This is useful while testing setup steps or if you plan to revert the test environment before every test.
 
 ## Topic branches, special test repo
-    bin/systest -c your_cfg.cfg --debug --type git -p 2.7.x -f 1.5.8 -t path-to-your-tests 
+    bundle exec systest -c your_cfg.cfg --debug --type git -p 2.7.x -f 1.5.8 -t path-to-your-tests 
 
     path-to-test:
     If you are testing on FOSS, the test for each branch can be found in the puppet repo under acceptance/tests
 
 Special topic branch checkout with a targeted test:
 
-    bin/systest -c your_cfg --type git -p https://github.com/SomeDude/puppet/tree/ticket/2.6.next/6856-dangling-symlinks -f 1.5.8 / 
+    bundle exec systest -c your_cfg --type git -p https://github.com/SomeDude/puppet/tree/ticket/2.6.next/6856-dangling-symlinks -f 1.5.8 / 
      -t tests/acceptance/ticket_6856_manage_not_work_with_symlinks.rb
      
      
