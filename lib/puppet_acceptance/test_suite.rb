@@ -25,12 +25,12 @@ module PuppetAcceptance
       @options   = options
       @config    = config
       @fail_mode = @options[:fail_mode] || fail_mode
-      @logger    = options[:logger]
+      @logger    = @options[:logger]
 
       @test_cases = []
       @test_files = []
 
-      options[:tests].each do |root|
+      Array( @options[:tests] ).each do |root|
         if File.file? root then
           @test_files << root
         else
@@ -39,18 +39,22 @@ module PuppetAcceptance
           ).select { |f| File.file?(f) }
         end
       end
-      report_and_raise(@logger, RuntimeError.new("#{@name}: no test files found..."), "TestSuite: initialize") if @test_files.empty?
+
+      # This kind of user input validation should happen earlier...
+      if @test_files.empty?
+        report_and_raise(@logger,
+                         RuntimeError.new("#{@name}: no test files found..."),
+                         "TestSuite: initialize")
+      end
 
       @test_files = @test_files.sort
-    rescue => e
-      report_and_raise(@logger, e, "TestSuite: initialize")
     end
 
     def run
       @run = true
       @start_time = Time.now
 
-      configure_logging 
+      configure_logging
 
       @test_files.each do |test_file|
         @logger.notify
